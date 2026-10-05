@@ -16,7 +16,7 @@ export default function WorkspaceError({ reset }: { error: Error; reset: () => v
       </div>
       <div className="flex gap-2">
         <Button onClick={reset}>Try again</Button>
-        <Button variant="outline" render={<Link href="/" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
           Back to Today
         </Button>
       </div>

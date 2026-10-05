@@ -72,7 +72,7 @@ export function Workspace({ taskId, query: q }: { taskId: string; query?: string
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2.5 sm:px-6">
-        <Button variant="ghost" size="icon-sm" render={<Link href="/" aria-label="Back to Today" />}>
+        <Button variant="ghost" size="icon-sm" nativeButton={false} render={<Link href="/" aria-label="Back to Today" />}>
           <ArrowLeftIcon aria-hidden />
         </Button>
         <div className="min-w-0 flex-1">

@@ -83,7 +83,7 @@ function BriefingInner() {
               >
                 <RefreshCwIcon aria-hidden /> Retry
               </Button>
-              <Button size="sm" variant="ghost" render={<Link href="/tasks" />}>
+              <Button size="sm" variant="ghost" nativeButton={false} render={<Link href="/tasks" />}>
                 Open all tasks
               </Button>
             </div>

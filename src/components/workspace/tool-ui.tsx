@@ -136,7 +136,7 @@ function PrototypeVersionCard({ version, label, restored }: { version: number; l
         <Button size="sm" variant="outline" onClick={() => setPane("three-strands-dashboard", "prototype")}>
           <LayersIcon aria-hidden /> Show preview
         </Button>
-        <Button size="sm" variant="outline" render={<a href={`${PREVIEW_PATH}?${previewQuery(config, current)}`} target="_blank" rel="noreferrer" />}>
+        <Button size="sm" variant="outline" nativeButton={false} render={<a href={`${PREVIEW_PATH}?${previewQuery(config, current)}`} target="_blank" rel="noreferrer" />}>
           <ExternalLinkIcon aria-hidden /> Open live
         </Button>
         {!isCurrent && (

@@ -104,7 +104,7 @@ export function PrototypePane() {
           >
             <CopyIcon className="size-4" aria-label="Copy shareable link" />
           </WebPreviewNavigationButton>
-          <Button size="sm" variant="default" render={<a href={liveHref} target="_blank" rel="noreferrer" />}>
+          <Button size="sm" variant="default" nativeButton={false} render={<a href={liveHref} target="_blank" rel="noreferrer" />}>
             <ExternalLinkIcon aria-hidden /> Open live
           </Button>
         </WebPreviewNavigation>
