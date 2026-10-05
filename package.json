@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 47831",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -p 47831",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.23",
@@ -21,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cn": "^0.4.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.52.0",
     "media-chrome": "^4.19.3",
@@ -31,6 +34,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-resizable-panels": "^4.14.2",
+    "recharts": "^3.8.0",
     "remark-gfm": "^4.0.1",
     "shadcn": "^4.21.1",
     "shiki": "^4.5.0",

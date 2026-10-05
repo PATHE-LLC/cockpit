@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored component-registry code (shadcn/ui, AI Elements, assistant-ui).
+    "src/components/ui/**",
+    "src/components/ai-elements/**",
+    "src/components/assistant-ui/**",
+    "src/hooks/**",
   ]),
 ]);
 
