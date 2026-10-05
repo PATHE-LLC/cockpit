@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GLENN_THREAD, RLS_CITATIONS, RLS_MIGRATION_SQL } from "@/lib/demo/content";
 import { useCockpit } from "@/lib/store";
 import { CitedText } from "../cited-text";
+import { ClientOnly } from "../client-only";
 import { CitationList, PaneScroll } from "./shared";
 
 export function SlackPane({ taskId }: { taskId: string }) {
@@ -69,9 +70,11 @@ export function SlackPane({ taskId }: { taskId: string }) {
           <p className="mb-3 text-sm text-muted-foreground">
             Sketch to attach in the thread. Not run against staging.
           </p>
-          <CodeBlock code={RLS_MIGRATION_SQL} language="sql">
-            <CodeBlockCopyButton />
-          </CodeBlock>
+          <ClientOnly height="h-64">
+            <CodeBlock code={RLS_MIGRATION_SQL} language="sql">
+              <CodeBlockCopyButton />
+            </CodeBlock>
+          </ClientOnly>
         </PaneScroll>
       </TabsContent>
     </Tabs>

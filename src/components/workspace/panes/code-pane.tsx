@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DANA_REQUEST, MODEL_6D_CHECKS } from "@/lib/demo/content";
 import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { ClientOnly } from "../client-only";
 import { PaneScroll } from "./shared";
 
 export function CodePane({ taskId }: { taskId: string }) {
@@ -55,9 +56,11 @@ export function CodePane({ taskId }: { taskId: string }) {
             ))}
           </div>
           <p className="mb-2 font-mono text-xs text-muted-foreground">{file.path}</p>
-          <CodeBlock code={file.patch} language="diff" showLineNumbers>
-            <CodeBlockCopyButton />
-          </CodeBlock>
+          <ClientOnly height="h-64">
+            <CodeBlock code={file.patch} language="diff" showLineNumbers>
+              <CodeBlockCopyButton />
+            </CodeBlock>
+          </ClientOnly>
         </PaneScroll>
       </TabsContent>
       <TabsContent value="checks" className="flex min-h-0 flex-col">

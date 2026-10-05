@@ -22,7 +22,7 @@ export function TaskRow({ task, index = 0 }: { task: Task; index?: number }) {
         checked={done}
         onCheckedChange={(v) => toggle(task.id, Boolean(v))}
         aria-label={`Mark “${task.title}” as done`}
-        className="mt-1 size-5 rounded-md"
+        className="relative z-10 mt-1 size-5 rounded-md"
       />
       <Link
         href={`/tasks/${task.id}`}

@@ -1,8 +1,9 @@
 "use client";
 
-import { AssistantRuntimeProvider, useAui, useLocalRuntime } from "@assistant-ui/react";
+import { AssistantRuntimeProvider, useAui, useAuiState, useLocalRuntime } from "@assistant-ui/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { createTaskAdapter } from "@/lib/chat/adapter";
 import { INITIAL_MESSAGES } from "@/lib/chat/initial";
@@ -24,6 +25,19 @@ function InitialPrompt({ taskId, query }: { taskId: string; query: string | unde
   return null;
 }
 
+function QuickActions({ prompts }: { prompts: string[] }) {
+  const aui = useAui();
+  const running = useAuiState((s) => s.thread.isRunning);
+  if (running) return null;
+  return (
+    <Suggestions aria-label="Suggested replies" className="px-0.5">
+      {prompts.map((p) => (
+        <Suggestion key={p} suggestion={p} onClick={(text) => aui.thread().append(text)} />
+      ))}
+    </Suggestions>
+  );
+}
+
 const Passthrough = ({ children }: { children?: React.ReactNode }) => <>{children}</>;
 
 export function ChatPane({ taskId, query }: { taskId: string; query?: string }) {
@@ -32,17 +46,18 @@ export function ChatPane({ taskId, query }: { taskId: string; query?: string }) 
 
   const runtime = useLocalRuntime(adapter, {
     initialMessages: INITIAL_MESSAGES[taskId] ?? INITIAL_MESSAGES.ask,
-    adapters: {
-      suggestion: {
-        generate: async () => suggestions.map((prompt) => ({ prompt })),
-      },
-    },
   });
+  const Followups = useMemo(
+    () => function Followups() {
+      return <QuickActions prompts={suggestions} />;
+    },
+    [suggestions],
+  );
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <InitialPrompt taskId={taskId} query={query} />
-      <Thread autoFocus={false} components={{ ToolFallback: ToolRouter, ToolGroup: Passthrough }} />
+      <Thread autoFocus={false} components={{ ToolFallback: ToolRouter, ToolGroup: Passthrough, FollowupSuggestions: Followups }} />
     </AssistantRuntimeProvider>
   );
 }
