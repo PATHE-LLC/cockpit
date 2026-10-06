@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function WorkspaceError({ reset }: { error: Error; reset: () => void }) {
   return (
-    <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+    <div className="page-column min-h-[50vh] flex-1 items-center justify-center gap-4 py-20 text-center">
       <AlertTriangleIcon className="size-8 text-destructive" aria-hidden />
       <div>
         <h1 className="text-lg font-semibold">This workspace didn&rsquo;t load</h1>

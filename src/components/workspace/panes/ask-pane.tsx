@@ -2,7 +2,7 @@
 
 import { RefreshCwIcon } from "lucide-react";
 import { TaskRow } from "@/components/home/task-checklist";
-import { TASKS } from "@/lib/demo/tasks";
+import { useCockpit } from "@/lib/store";
 import { PaneScroll } from "./shared";
 
 const SOURCES = [
@@ -15,12 +15,15 @@ const SOURCES = [
 ];
 
 export function AskPane() {
+  const tasks = useCockpit((s) => s.tasks);
+  const discarded = useCockpit((s) => s.discarded);
+  const visible = tasks.filter((task) => !discarded[task.id]);
   return (
     <PaneScroll>
       <h2 className="text-sm font-medium">Context CockpitOS can see</h2>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {SOURCES.map((s) => (
-          <li key={s.name} className="rounded-xl border bg-card p-3">
+          <li key={s.name} className="py-2">
             <p className="text-sm font-medium">{s.name}</p>
             <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               <RefreshCwIcon className="size-3" aria-hidden /> {s.detail}
@@ -30,8 +33,8 @@ export function AskPane() {
       </ul>
       <h2 className="mt-6 mb-1 text-sm font-medium">Prepared tasks</h2>
       <ul className="flex flex-col">
-        {TASKS.map((t, i) => (
-          <TaskRow key={t.id} task={t} index={i} />
+        {visible.map((task, i) => (
+          <TaskRow key={task.id} task={task} index={i} />
         ))}
       </ul>
     </PaneScroll>

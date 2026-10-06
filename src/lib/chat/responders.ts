@@ -62,17 +62,17 @@ function slackReply(text: string): Reply {
   }
   if (has(text, /source|cite|citation|why|evidence|where|proof/)) {
     return {
-      text: "Every claim in the draft maps to a source in the panel:\n\n- **[1]** Supabase docs: service keys bypass RLS.\n- **[2]** Supabase docs: wrap `auth.uid()` in a select and index policy columns.\n- **[3]** Postgres `CREATE POLICY`: `TO` limits which roles evaluate a policy.\n- **[4]** Your `nightly-reconcile.yml`: the cron uses `SERVICE_ROLE_KEY`, which is why I could say it's safe.\n\nOnly [4] is internal. I'd double check the key name in prod before you send.",
+      text: "Sources:\n\n- **[1]** Supabase docs: service keys bypass RLS.\n- **[2]** Supabase docs: wrap `auth.uid()` in a select and index policy columns.\n- **[3]** Postgres `CREATE POLICY`: `TO` limits which roles evaluate a policy.\n- **[4]** `nightly-reconcile.yml`: the cron uses `SERVICE_ROLE_KEY`.",
     };
   }
   if (has(text, /send|post|publish/)) {
     return {
-      text: "I won't post this on my own. Your autonomy setting is draft-only for Slack. Review the draft and press **Send to #eng-backend** when you're happy.",
+      text: "I won't post this. Press **Send to #eng-backend** when the draft is ready.",
       tool: { name: "slack_draft", args: { rev: s.slack.rev } },
     };
   }
   return {
-    text: "I can shorten the reply, make it more casual, add the migration SQL, or walk through any source. You can also edit the draft directly. Your changes are kept.",
+    text: "Edit the draft, or say what to change.",
   };
 }
 
@@ -82,7 +82,7 @@ function emailReply(text: string): Reply {
     const applied = s.setEmailAnswers({ short: true });
     return {
       text: applied
-        ? "Shortened to the essentials. The full feasibility table is still in the panel if Alyssa asks for detail."
+        ? "Shortened."
         : "You've edited the body by hand, so I left it alone. Use **Regenerate** on the draft to rebuild it from the answers.",
       tool: { name: "email_draft", args: { rev: state().email.rev } },
     };
@@ -224,7 +224,7 @@ function figmaReply(text: string): Reply {
     return { text: "Marked the selected frame approved. Sam will see the status change in Figma." };
   }
   return {
-    text: "Try: *add an error state*, *show it in Japanese*, *show original on hover*, or *add SRT export*. Every change lands on the canvas, and Sam sees it live in the shared file.",
+    text: "Say what to change on the frames.",
   };
 }
 
@@ -270,7 +270,7 @@ function prototypeReply(text: string): Reply {
     const clean = raw.length > 3 ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Export the visible strand as CSV";
     s.appendRequirement(`${clean}.`);
     return {
-      text: `Added to **Requirements** in the PRD: "${clean}." Open the PRD tab to review or edit.`,
+      text: `Added to Requirements: "${clean}."`,
     };
   }
   const matched = PROTOTYPE_RULES.filter((r) => r.test.test(text.toLowerCase()));
@@ -280,13 +280,58 @@ function prototypeReply(text: string): Reply {
     const version = s.applyPrototypeChange(patch, label);
     return {
       reasoning: "Updating the prototype's config and pushing a commit to the feature branch.",
-      text: `${matched.map((m) => m.say).join(" ")}\n\nCommitted as **v${version}** and redeployed. The preview beside this chat is already updated.`,
+      text: `${matched.map((m) => m.say).join(" ")}\n\n**v${version}**`,
       tool: { name: "prototype_version", args: { version, label } },
     };
   }
   return {
-    text: "Try things like *make it compact*, *dark theme*, *use a line chart*, *hide trends*, *only delivery*, or *add a requirement for CSV export to the PRD*. Say *revert to v1* to go back.",
+    text: "Say what to change.",
   };
+}
+
+export function newTaskIntent(text: string): { bare: boolean; detail: string } | null {
+  const match = text
+    .trim()
+    .match(/^(?:please\s+)?(?:new|create|add|start)(?:\s+an|\s+a)?\s+task\b[:\s,-]*(.*)$/i);
+  if (!match) return null;
+  const detail = match[1].trim();
+  return { bare: detail.length === 0, detail };
+}
+
+function intakeReply(text: string): Reply {
+  const s = state();
+  const trimmed = text.trim();
+  const intent = newTaskIntent(trimmed);
+  const phase = s.intake.phase;
+
+  if (!phase) {
+    if (!trimmed || intent?.bare) {
+      s.setIntake({ phase: "what", what: "", who: "" });
+      return { text: "What is it?" };
+    }
+    const what = intent?.detail || trimmed;
+    s.setIntake({ phase: "who", what, who: "" });
+    return { text: "Who is it for?" };
+  }
+  if (phase === "what") {
+    if (!trimmed || intent?.bare) return { text: "What is it?" };
+    const what = intent?.detail || trimmed;
+    s.setIntake({ phase: "who", what, who: "" });
+    return { text: "Who is it for?" };
+  }
+  if (phase === "who") {
+    s.setIntake({ phase: "done", what: s.intake.what, who: trimmed });
+    return { text: "What does done look like?" };
+  }
+  const title = s.intake.what || trimmed;
+  s.addTask({
+    title,
+    requester: s.intake.who || "You",
+    summary: trimmed,
+    due: "Soon",
+  });
+  s.setIntake({ phase: null, what: "", who: "" });
+  return { text: `Added “${title}” to your checklist.` };
 }
 
 function adHocReply(text: string): Reply {
@@ -304,6 +349,11 @@ function adHocReply(text: string): Reply {
 }
 
 export function respond(taskId: string, text: string): Reply {
+  if (taskId !== "intake" && newTaskIntent(text)) {
+    state().handoffToIntake(text);
+    return { text: "Starting a new task." };
+  }
+  if (taskId === "intake") return intakeReply(text);
   switch (taskId) {
     case "glenn-supabase-rls":
       return slackReply(text);

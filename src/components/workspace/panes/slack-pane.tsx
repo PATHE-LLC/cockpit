@@ -24,9 +24,6 @@ export function SlackPane({ taskId }: { taskId: string }) {
       </div>
       <TabsContent value="sources" className="flex min-h-0 flex-col">
         <PaneScroll>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Every claim in the draft maps to one of these. Hover a number in the preview to see the quote.
-          </p>
           <CitationList citations={RLS_CITATIONS} />
         </PaneScroll>
       </TabsContent>

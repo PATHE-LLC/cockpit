@@ -30,9 +30,6 @@ export function EmailPane({ taskId }: { taskId: string }) {
       </div>
       <TabsContent value="feasibility" className="flex min-h-0 flex-col">
         <PaneScroll>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Each requirement from Alyssa&rsquo;s email, mapped to what Wix does without custom code.
-          </p>
           <ul className="stagger-in flex flex-col gap-2.5">
             {FEASIBILITY.map((row, i) => {
               const v = VERDICT[row.verdict];

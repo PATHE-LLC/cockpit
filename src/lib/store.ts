@@ -19,7 +19,9 @@ import {
   type PrototypeConfig,
   type PrototypeVersion,
 } from "./demo/content";
+import { TASKS } from "./demo/tasks";
 import type { EmailDraft, Task, TaskStatus } from "./demo/types";
+import { playCue } from "./sounds";
 
 export type AutonomyLevel = "suggest" | "prepare" | "act";
 
@@ -37,9 +39,45 @@ export interface AutonomyState {
 
 export type Approval = "pending" | "approved" | "rejected";
 
+export interface IntakeState {
+  phase: "what" | "who" | "done" | null;
+  what: string;
+  who: string;
+}
+
+export interface TaskDraft {
+  title: string;
+  requester?: string;
+  summary: string;
+  due: string;
+  project?: string;
+}
+
 interface CockpitState {
   pane: Record<string, string>;
   setPane: (taskId: string, pane: string) => void;
+  /** Side artifact is closed until an in-chat action opens it. */
+  open: Record<string, boolean>;
+  openArtifact: (taskId: string, pane?: string) => void;
+  closeArtifact: (taskId: string) => void;
+
+  tasks: Task[];
+  discarded: Record<string, boolean>;
+  addTask: (draft: TaskDraft) => string;
+  updateTask: (id: string, patch: Partial<TaskDraft>) => void;
+  deleteTask: (id: string) => void;
+  discardTask: (id: string) => void;
+  restoreTask: (id: string) => void;
+  /** null is closed. taskId null is a new task. */
+  taskForm: { taskId: string | null } | null;
+  openTaskForm: (taskId?: string | null) => void;
+  closeTaskForm: () => void;
+
+  intake: IntakeState;
+  setIntake: (intake: IntakeState) => void;
+  intakeHandoff: string | null;
+  handoffToIntake: (text: string) => void;
+  clearIntakeHandoff: () => void;
 
   completed: Record<string, boolean>;
   toggleCompleted: (id: string, value?: boolean) => void;
@@ -100,7 +138,9 @@ interface CockpitState {
 
   prd: { title: string; sections: PrdSection[] };
   setPrdTitle: (t: string) => void;
+  setPrdHeading: (id: string, heading: string) => void;
   setPrdSection: (id: string, body: string) => void;
+  addPrdSection: (kind: "text" | "list") => void;
   appendRequirement: (text: string) => void;
 
   prototype: {
@@ -115,6 +155,62 @@ interface CockpitState {
 export const useCockpit = create<CockpitState>((set, get) => ({
   pane: {},
   setPane: (taskId, pane) => set((s) => ({ pane: { ...s.pane, [taskId]: pane } })),
+  open: {},
+  openArtifact: (taskId, pane) => {
+    playCue("pane");
+    set((s) => ({
+      open: { ...s.open, [taskId]: true },
+      pane: pane ? { ...s.pane, [taskId]: pane } : s.pane,
+    }));
+  },
+  closeArtifact: (taskId) => set((s) => ({ open: { ...s.open, [taskId]: false } })),
+
+  tasks: TASKS.map((task) => ({ ...task, origin: "suggested" as const })),
+  discarded: {},
+  addTask: (draft) => {
+    const id = `task-${Date.now().toString(36)}`;
+    const task: Task = {
+      id,
+      kind: "ad-hoc",
+      title: draft.title,
+      summary: draft.summary,
+      app: "meeting",
+      requester: draft.requester?.trim() || "You",
+      status: "needs-review",
+      statusDetail: "Yours",
+      prepared: [],
+      due: draft.due ?? "Soon",
+      project: draft.project?.trim() ?? "",
+      autonomy: "You added this. Nothing is sent until you ask.",
+      origin: "yours",
+    };
+    set((s) => ({ tasks: [...s.tasks, task] }));
+    return id;
+  },
+  updateTask: (id, patch) =>
+    set((s) => ({
+      tasks: s.tasks.map((task) => (task.id === id ? { ...task, ...patch } : task)),
+    })),
+  deleteTask: (id) =>
+    set((s) => {
+      const completed = { ...s.completed };
+      const discarded = { ...s.discarded };
+      delete completed[id];
+      delete discarded[id];
+      return { tasks: s.tasks.filter((task) => task.id !== id), completed, discarded };
+    }),
+  discardTask: (id) => set((s) => ({ discarded: { ...s.discarded, [id]: true } })),
+  restoreTask: (id) => set((s) => ({ discarded: { ...s.discarded, [id]: false } })),
+
+  taskForm: null,
+  openTaskForm: (taskId = null) => set({ taskForm: { taskId } }),
+  closeTaskForm: () => set({ taskForm: null }),
+
+  intake: { phase: null, what: "", who: "" },
+  setIntake: (intake) => set({ intake }),
+  intakeHandoff: null,
+  handoffToIntake: (intakeHandoff) => set({ intakeHandoff }),
+  clearIntakeHandoff: () => set({ intakeHandoff: null }),
 
   completed: {},
   toggleCompleted: (id, value) =>
@@ -288,9 +384,27 @@ export const useCockpit = create<CockpitState>((set, get) => ({
 
   prd: { title: PRD_TITLE_INITIAL, sections: PRD_SECTIONS_INITIAL },
   setPrdTitle: (title) => set((s) => ({ prd: { ...s.prd, title } })),
+  setPrdHeading: (id, heading) =>
+    set((s) => ({
+      prd: { ...s.prd, sections: s.prd.sections.map((x) => (x.id === id ? { ...x, heading } : x)) },
+    })),
   setPrdSection: (id, body) =>
     set((s) => ({
       prd: { ...s.prd, sections: s.prd.sections.map((x) => (x.id === id ? { ...x, body } : x)) },
+    })),
+  addPrdSection: (kind) =>
+    set((s) => ({
+      prd: {
+        ...s.prd,
+        sections: [
+          ...s.prd.sections,
+          {
+            id: `sec-${Date.now().toString(36)}`,
+            heading: kind === "list" ? "List" : "Notes",
+            body: kind === "list" ? "1. " : "",
+          },
+        ],
+      },
     })),
   appendRequirement: (text) =>
     set((s) => ({

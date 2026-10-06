@@ -88,6 +88,28 @@ describe("Recall Figma task", () => {
   });
 });
 
+describe("new task intake", () => {
+  it("asks three short questions, then adds the task", () => {
+    expect(respond("intake", "new task").text).toBe("What is it?");
+    expect(respond("intake", "Send Priya the revised invoice").text).toBe("Who is it for?");
+    expect(respond("intake", "Priya").text).toBe("What does done look like?");
+    expect(respond("intake", "She has the PDF").text).toMatch(/Added “Send Priya the revised invoice”/);
+    const added = useCockpit.getState().tasks.at(-1);
+    expect(added).toMatchObject({
+      title: "Send Priya the revised invoice",
+      requester: "Priya",
+      summary: "She has the PDF",
+      origin: "yours",
+    });
+  });
+
+  it("hands a new-task request off from an existing thread", () => {
+    respond("glenn-supabase-rls", "create a task");
+    expect(useCockpit.getState().intakeHandoff).toBe("create a task");
+    expect(useCockpit.getState().slack.rev).toBe(0);
+  });
+});
+
 describe("3 Strands prototype task", () => {
   it("applies multiple changes in one new version", () => {
     respond("three-strands-dashboard", "make it compact with a dark theme");

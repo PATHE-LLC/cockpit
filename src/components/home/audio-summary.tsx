@@ -1,19 +1,30 @@
 "use client";
 
-import { ChevronDownIcon, PauseIcon, PlayIcon, Volume2Icon } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { BRIEFING } from "@/lib/demo/tasks";
 import { cn } from "@/lib/utils";
 
 const BARS = Array.from({ length: 36 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+function TransportIcon({ playing }: { playing: boolean }) {
+  if (playing) {
+    return (
+      <svg viewBox="0 0 24 24" className="size-6" fill="currentColor" aria-hidden>
+        <rect x="5" y="3.5" width="4.75" height="17" rx="1.6" />
+        <rect x="14.25" y="3.5" width="4.75" height="17" rx="1.6" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" className="ml-0.5 size-6" fill="currentColor" aria-hidden>
+      <path d="M6 3.8c0-1.2 1.32-1.94 2.34-1.3L20.4 10.7c.95.58.95 2.02 0 2.6L8.34 21.5C7.32 22.14 6 21.4 6 20.2V3.8Z" />
+    </svg>
+  );
+}
 
 export function AudioSummary() {
   const lines = BRIEFING.transcript;
@@ -27,7 +38,6 @@ export function AudioSummary() {
 
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [open, setOpen] = useState(false);
   const elapsedRef = useRef(0);
 
   const lineAt = useCallback(
@@ -92,34 +102,31 @@ export function AudioSummary() {
   };
 
   const progress = elapsed / BRIEFING.durationSeconds;
-  const current = lineAt(elapsed);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="rounded-2xl border bg-card">
-      <div className="flex items-center gap-3 p-3 sm:p-3.5">
+    <div className="flex items-center gap-3 rounded-full border bg-card py-1.5 pr-2 pl-3" data-tour="brief">
         <Button
-          size="icon"
           variant="default"
-          className="size-9 shrink-0 rounded-full"
+          className="size-12 shrink-0 rounded-full p-0"
           onClick={toggle}
-          aria-label={playing ? "Pause audio summary" : "Play audio summary"}
+          aria-label={playing ? "Pause Morning Brief" : "Play Morning Brief"}
         >
-          {playing ? <PauseIcon className="size-4" aria-hidden /> : <PlayIcon className="size-4" aria-hidden />}
+          <TransportIcon playing={playing} />
         </Button>
-        <div className="min-w-0 flex-1">
+        <div className="flex h-14 min-w-0 flex-1 flex-col justify-center">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="truncate text-sm font-medium">Audio summary</p>
+            <p className="truncate text-sm font-medium">Morning Brief</p>
             <p className="tabular text-xs text-muted-foreground" aria-live="off">
               {fmt(elapsed)} / {fmt(BRIEFING.durationSeconds)}
             </p>
           </div>
           <div
             role="progressbar"
-            aria-label="Audio summary progress"
+            aria-label="Morning Brief progress"
             aria-valuemin={0}
             aria-valuemax={BRIEFING.durationSeconds}
             aria-valuenow={Math.round(elapsed)}
-            className="mt-1.5 flex h-6 items-center gap-[2px]"
+            className="mt-1 flex h-5 items-center gap-[2px]"
           >
             {BARS.map((h, i) => {
               const done = i / BARS.length < progress;
@@ -141,35 +148,9 @@ export function AudioSummary() {
             })}
           </div>
         </div>
-        <CollapsibleTrigger
-          render={<Button variant="ghost" size="icon-sm" aria-label={open ? "Hide transcript" : "Show transcript"} />}
-        >
-          <ChevronDownIcon
-            className={cn("size-4 transition-transform duration-200 ease-out-strong motion-reduce:transition-none", open && "rotate-180")}
-            aria-hidden
-          />
-        </CollapsibleTrigger>
-      </div>
-      <CollapsibleContent>
-        <div className="border-t px-4 py-3">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Volume2Icon className="size-3.5" aria-hidden /> Transcript
-          </p>
-          <ol className="flex flex-col gap-1.5 text-sm">
-            {lines.map((l, i) => (
-              <li
-                key={l}
-                className={cn(
-                  "transition-colors duration-200",
-                  playing && i === current ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {l.replace(/R L S/g, "RLS").replace(/P R D/g, "PRD")}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+        <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/briefing" />} className="mr-1 shrink-0">
+          Open briefing
+        </Button>
+    </div>
   );
 }

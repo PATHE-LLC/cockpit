@@ -322,6 +322,66 @@ export const MODEL_6D_DIFF: DiffFile[] = [
   },
 ];
 
+export const MODEL_6D_PR = {
+  title: "Add Model 6D to the OL RMA SL self-service form",
+  repo: "ol-rma-sl",
+  commits: [
+    ["a1c4e90", "Add Model 6D to the self-service form options"],
+    ["b77d21a", "Pass Model 6D through the RMA submit path"],
+    ["c90e118", "Cover the Model 6D path with Playwright"],
+  ] as const,
+  files: ["app/self-service/form.tsx", "app/self-service/submit.ts", "tests/self-service.spec.ts"],
+  description: `Alyssa asked for Model 6D on the self-service form.
+
+This adds the option, carries it through submit, and covers the path with Playwright. The suite passed.
+
+The reply to Alyssa is drafted in the thread and is not sent until you approve it.`,
+};
+
+export const MODEL_6D_PR_PATCH = `diff --git a/app/self-service/form.tsx b/app/self-service/form.tsx
+index 1111111..2222222 100644
+--- a/app/self-service/form.tsx
++++ b/app/self-service/form.tsx
+@@ -1,4 +1,4 @@
+-const MODELS = ["Model 4A", "Model 5C", "Model 5E"] as const;
++const MODELS = ["Model 4A", "Model 5C", "Model 5E", "Model 6D"] as const;
+ 
+ export function ModelField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+   return (
+diff --git a/app/self-service/submit.ts b/app/self-service/submit.ts
+index 1111111..2222222 100644
+--- a/app/self-service/submit.ts
++++ b/app/self-service/submit.ts
+@@ -1,5 +1,6 @@
+-export async function submitRma(input: { serial: string; notes: string }) {
++export async function submitRma(input: { model: string; serial: string; notes: string }) {
+   return client.post("/rma", {
++    model: input.model,
+     serial: input.serial,
+     notes: input.notes,
+   });
+diff --git a/tests/self-service.spec.ts b/tests/self-service.spec.ts
+index 1111111..2222222 100644
+--- a/tests/self-service.spec.ts
++++ b/tests/self-service.spec.ts
+@@ -1,7 +1,12 @@
+ test("customer can submit an RMA", async ({ page }) => {
+   await page.goto("/self-service");
+-  await page.getByLabel("Model").selectOption("Model 5E");
+-  await page.getByLabel("Serial").fill("SN-1008");
++  await page.getByLabel("Model").selectOption("Model 6D");
++  await page.getByLabel("Serial").fill("6D-1044");
+   await page.getByRole("button", { name: "Submit" }).click();
+-  await expect(page.getByRole("status")).toContainText("Model 5E");
++  await expect(page.getByRole("status")).toContainText("Model 6D");
+ });
++
++test("Model 6D is offered on the self-service form", async ({ page }) => {
++  await page.goto("/self-service");
++  await expect(page.getByLabel("Model").locator("option")).toContainText(["Model 6D"]);
++});
+`;
+
 export const MODEL_6D_CHECKS = [
   { name: "Typecheck", result: "Passed", detail: "tsc --noEmit · 0 errors" },
   { name: "Lint", result: "Passed", detail: "eslint · 0 warnings" },
@@ -334,6 +394,8 @@ export const DANA_REPLY_INITIAL = `Hi Dana, the self-service contact form for Mo
 I haven't pushed it yet. Once I open the PR you can try it on the preview link. Can you confirm whether phone should stay optional?`;
 
 /* ---------- Task 4: Recall translation screens ---------- */
+
+export const FIGMA_FILE_URL = "https://www.figma.com";
 
 export interface FigmaFrame {
   id: string;
