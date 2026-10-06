@@ -2,6 +2,7 @@
 
 import { ShieldCheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -38,20 +39,21 @@ export function AutonomySheet() {
 
   return (
     <Sheet>
-      <SheetTrigger
-        render={
-          <Button variant="ghost" size="sm" className="gap-1.5" aria-label="Autonomy settings" />
-        }
-      >
-        <ShieldCheckIcon className="size-4" aria-hidden />
-        <span className="hidden sm:inline">Autonomy: {current.label}</span>
-      </SheetTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          delay={0}
+          render={<SheetTrigger render={<Button variant="ghost" size="icon" aria-label="Autonomy" />} />}
+        >
+          <ShieldCheckIcon aria-hidden />
+        </TooltipTrigger>
+        <TooltipContent side="left" sideOffset={12}>
+          Autonomy
+        </TooltipContent>
+      </Tooltip>
       <SheetContent side="right" className="w-full gap-0 sm:max-w-md">
         <SheetHeader className="border-b">
-          <SheetTitle>How much should CockpitOS do for you?</SheetTitle>
-          <SheetDescription>
-            You decide what happens while you&rsquo;re offline or focused elsewhere. Changes apply immediately.
-          </SheetDescription>
+          <SheetTitle>Autonomy</SheetTitle>
+          <SheetDescription>What runs while you are away.</SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
           <section aria-labelledby="level-h" className="flex flex-col gap-2">

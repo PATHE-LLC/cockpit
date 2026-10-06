@@ -1,37 +1,59 @@
 "use client";
 
-import { ArrowLeftIcon, CheckIcon, ShieldCheckIcon } from "lucide-react";
+import { CheckIcon, MoreHorizontalIcon, XIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { StatusBadge } from "@/components/task-meta";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TASK_BY_ID } from "@/lib/demo/tasks";
 import type { Task } from "@/lib/demo/types";
+import { playCue } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { ChatPane } from "./chat-pane";
 import { AskPane } from "./panes/ask-pane";
 import { CodePane } from "./panes/code-pane";
 import { EmailPane } from "./panes/email-pane";
-import { FigmaPane } from "./panes/figma-pane";
 import { SlackPane } from "./panes/slack-pane";
 import { ThreeStrandsPane } from "./panes/three-strands-pane";
 
 const ASK_TASK: Task = {
   id: "ask",
   kind: "ad-hoc",
-  title: "Ask CockpitOS",
+  title: "Ask",
   summary: "",
   app: "slack",
   requester: "You",
   status: "needs-review",
-  statusDetail: "Ad-hoc question",
+  statusDetail: "Ask",
   prepared: [],
   due: "Today",
-  autonomy: "Answers only. Nothing is changed or sent.",
+  autonomy: "Answers only.",
 };
+
+const INTAKE_TASK: Task = {
+  id: "intake",
+  kind: "ad-hoc",
+  title: "New task",
+  summary: "",
+  app: "meeting",
+  requester: "You",
+  status: "needs-review",
+  statusDetail: "New",
+  prepared: [],
+  due: "Soon",
+  autonomy: "Nothing is created until you answer.",
+  origin: "yours",
+};
+
+const SPECIAL: Record<string, Task> = { ask: ASK_TASK, intake: INTAKE_TASK };
 
 const query = "(min-width: 1024px)";
 const subscribe = (cb: () => void) => {
@@ -50,8 +72,6 @@ function Pane({ task }: { task: Task }) {
       return <EmailPane taskId={task.id} />;
     case "code-change":
       return <CodePane taskId={task.id} />;
-    case "figma-design":
-      return <FigmaPane taskId={task.id} />;
     case "prd-prototype":
       return <ThreeStrandsPane taskId={task.id} />;
     default:
@@ -59,74 +79,138 @@ function Pane({ task }: { task: Task }) {
   }
 }
 
-export function Workspace({ taskId, query: q }: { taskId: string; query?: string }) {
-  const task = TASK_BY_ID[taskId] ?? ASK_TASK;
+function TaskHeader({ task, open }: { task: Task; open: boolean }) {
   const done = useCockpit((s) => Boolean(s.completed[task.id]));
+  const discarded = useCockpit((s) => Boolean(s.discarded[task.id]));
   const toggle = useCockpit((s) => s.toggleCompleted);
-  const isDesktop = useIsDesktop();
-  const status = done ? "done" : task.status;
-
-  const chat = <ChatPane taskId={task.id} query={q} />;
-  const pane = <Pane task={task} />;
+  const discard = useCockpit((s) => s.discardTask);
+  const restore = useCockpit((s) => s.restoreTask);
+  const remove = useCockpit((s) => s.deleteTask);
+  const openTaskForm = useCockpit((s) => s.openTaskForm);
+  const router = useRouter();
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2.5 sm:px-6">
-        <Button variant="ghost" size="icon-sm" nativeButton={false} render={<Link href="/" aria-label="Back to Today" />}>
-          <ArrowLeftIcon aria-hidden />
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-sm font-semibold tracking-tight sm:text-base">{task.title}</h1>
-          <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-            <ShieldCheckIcon className="size-3 shrink-0" aria-hidden />
-            <span className="truncate">{task.autonomy}</span>
-          </p>
+    <div className={cn("flex flex-col gap-2 py-2", open && "px-6")}>
+        <div className="flex items-center gap-2">
+          <h1 className="min-w-0 flex-1 truncate text-sm font-medium">{task.title}</h1>
+          <div className="flex shrink-0 items-center gap-1" data-tour="task-actions">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="icon-sm" aria-label="More actions" />}
+              >
+                <MoreHorizontalIcon aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => openTaskForm(task.id)}>Edit</DropdownMenuItem>
+                {discarded ? (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      restore(task.id);
+                      playCue("restore");
+                    }}
+                  >
+                    Restore
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      discard(task.id);
+                      playCue("discard");
+                    }}
+                  >
+                    Archive
+                  </DropdownMenuItem>
+                )}
+                {discarded ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        remove(task.id);
+                        router.push("/tasks?archive=1");
+                      }}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              variant={done ? "secondary" : "outline"}
+              aria-pressed={done}
+              onClick={() => {
+                const next = !done;
+                toggle(task.id, next);
+                if (next) playCue("done");
+              }}
+            >
+              <CheckIcon aria-hidden /> {done ? "Done" : "Mark done"}
+            </Button>
+          </div>
         </div>
-        <StatusBadge status={status} label={done ? "Done" : task.statusDetail} className="hidden max-w-xs sm:inline-flex" />
-        {task.kind !== "ad-hoc" && (
-          <Button
-            size="sm"
-            variant={done ? "secondary" : "outline"}
-            aria-pressed={done}
-            onClick={() => toggle(task.id, !done)}
-          >
-            <CheckIcon aria-hidden /> {done ? "Done" : "Mark done"}
-          </Button>
-        )}
-      </div>
-
-      {isDesktop ? (
-        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-          <ResizablePanel defaultSize="38%" minSize="28%" maxSize="55%" className="min-w-0">
-            {chat}
-          </ResizablePanel>
-          <ResizableHandle withHandle aria-label="Resize chat and workspace panels" />
-          <ResizablePanel defaultSize="62%" minSize="35%" className="flex min-w-0 flex-col">
-            {pane}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      ) : (
-        <MobileLayout chat={chat} pane={pane} />
-      )}
     </div>
   );
 }
 
-function MobileLayout({ chat, pane }: { chat: React.ReactNode; pane: React.ReactNode }) {
-  return (
-    <Tabs defaultValue="chat" className="min-h-0 flex-1 gap-0">
-      <div className="border-b px-4 py-2">
-        <TabsList className="w-full" aria-label="Workspace view">
-          <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="work">Prepared work</TabsTrigger>
-        </TabsList>
+export function Workspace({ taskId, query: q }: { taskId: string; query?: string }) {
+  const stored = useCockpit((s) => s.tasks.find((task) => task.id === taskId));
+  const task = stored ?? SPECIAL[taskId];
+  const open = useCockpit((s) => Boolean(s.open[task?.id ?? ""]) && task?.kind !== "figma-design");
+  const close = useCockpit((s) => s.closeArtifact);
+  const isDesktop = useIsDesktop();
+
+  if (!task) {
+    return (
+      <div className="page-column min-h-0 flex-1 items-center justify-center gap-4 py-20 text-center">
+        <h1 className="text-lg font-semibold">That task is gone</h1>
+        <p className="text-sm text-muted-foreground">It was deleted from this session.</p>
+        <Button nativeButton={false} render={<Link href="/tasks" />}>
+          All tasks
+        </Button>
       </div>
-      <TabsContent value="chat" keepMounted className={cn("min-h-0 flex-1 data-[hidden]:hidden")}>
-        {chat}
-      </TabsContent>
-      <TabsContent value="work" className="flex min-h-0 flex-1 flex-col">
-        {pane}
-      </TabsContent>
-    </Tabs>
+    );
+  }
+
+  const chat = <ChatPane taskId={task.id} query={q} flush={!open} />;
+  const artifact = (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex items-center border-b px-2 py-1">
+        <Button variant="ghost" size="sm" onClick={() => close(task.id)}>
+          <XIcon aria-hidden /> Close
+        </Button>
+      </div>
+      <Pane task={task} />
+    </div>
+  );
+
+  const header = task.id === "ask" || task.id === "intake" ? null : <TaskHeader task={task} open={open} />;
+
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      {!open ? (
+        <div className="flex min-h-0 flex-1 flex-col">
+          {header ? <div className="page-column">{header}</div> : null}
+          {chat}
+        </div>
+      ) : isDesktop ? (
+        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+          <ResizablePanel defaultSize="42%" minSize="28%" maxSize="60%" className="min-w-0">
+            <div className="flex h-full min-h-0 flex-col">
+              {header}
+              {chat}
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle aria-label="Resize panels" />
+          <ResizablePanel defaultSize="58%" minSize="32%" className="flex min-w-0 flex-col">
+            {artifact}
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        artifact
+      )}
+    </div>
   );
 }

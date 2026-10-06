@@ -1,4 +1,5 @@
 import type { ChatModelAdapter } from "@assistant-ui/react";
+import { playCue } from "../sounds";
 import { respond } from "./responders";
 
 const sleep = (ms: number, signal: AbortSignal) =>
@@ -38,6 +39,7 @@ export function createTaskAdapter(taskId: string): ChatModelAdapter {
   return {
     async *run({ messages, abortSignal }) {
       const input = lastUserText(messages as never);
+      if (input.trim()) playCue("send");
       if (/^\/error\b/i.test(input.trim())) {
         await sleep(450, abortSignal);
         throw new Error("The demo model is unreachable. Retry from the message actions.");

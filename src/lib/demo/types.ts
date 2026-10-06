@@ -27,7 +27,11 @@ export interface Task {
   statusDetail: string;
   prepared: string[];
   due: string;
+  /** Free-text project. Empty on seeded tasks. */
+  project?: string;
   autonomy: string;
+  /** Seeded tasks are suggested. Tasks you add are yours. */
+  origin?: "suggested" | "yours";
 }
 
 export interface Citation {

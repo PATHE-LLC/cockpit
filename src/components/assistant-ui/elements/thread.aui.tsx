@@ -128,6 +128,8 @@ const taskAwareGroupBy = (
 export type ThreadProps = {
   components?: ThreadComponents | undefined;
   autoFocus?: boolean | undefined;
+  /** Fill a parent that already sets the page column. */
+  flush?: boolean | undefined;
 };
 
 const EMPTY_COMPONENTS: ThreadComponents = {};
@@ -172,19 +174,21 @@ const ThreadHistorySkeleton: FC = () => (
 export const Thread: FC<ThreadProps> = ({
   components = EMPTY_COMPONENTS,
   autoFocus = true,
+  flush = false,
 }) => {
   const isEmpty = useAuiState(isNewChatView);
 
   return (
     <ThreadComponentsContext.Provider value={components}>
-      <ThreadRoot isEmpty={isEmpty} autoFocus={autoFocus} />
+      <ThreadRoot isEmpty={isEmpty} autoFocus={autoFocus} flush={flush} />
     </ThreadComponentsContext.Provider>
   );
 };
 
-const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
+const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; flush: boolean }> = ({
   isEmpty,
   autoFocus,
+  flush,
 }) => {
   const { Welcome = ThreadWelcome, FollowupSuggestions = ThreadFollowupSuggestions } =
     useContext(ThreadComponentsContext);
@@ -193,11 +197,11 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root bg-background @container flex h-full flex-col"
       style={{
-        ["--thread-max-width" as string]: "44rem",
+        ["--thread-max-width" as string]: "100%",
         ["--composer-bg" as string]:
           "color-mix(in oklab, var(--color-muted) 30%, transparent)",
-        ["--composer-radius" as string]: "1rem",
-        ["--composer-padding" as string]: "8px",
+        ["--composer-radius" as string]: "1.25rem",
+        ["--composer-padding" as string]: "12px",
       }}
     >
       <ThreadPrimitive.Viewport
@@ -205,11 +209,12 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
         scrollToBottomOnInitialize={false}
         scrollToBottomOnThreadSwitch={false}
         data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
+        className="edge-scroll relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto scroll-smooth"
       >
         <div
           className={cn(
-            "mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4",
+            "mx-auto flex w-full flex-1 flex-col pt-4",
+            flush ? "page-column" : "max-w-full px-6",
             isEmpty && "justify-center",
           )}
         >
@@ -404,8 +409,8 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone render={<div data-slot="aui_composer-shell" className="border-foreground/10 focus-within:border-foreground/25 data-[dragging=true]:border-ring flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color] data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))]" />}><ComposerAttachments /><ComposerPrimitive.Input
-                      placeholder="Reply or ask for changes…"
-                      className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none"
+                      placeholder="Message"
+                      className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-base leading-6 outline-none"
                       rows={1}
                       autoFocus={autoFocus}
                       enterKeyHint="send"
@@ -633,7 +638,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content peer bg-muted text-foreground rounded-(--composer-radius) px-4 py-2 wrap-break-word empty:hidden">
+        <div className="aui-user-message-content peer bg-muted text-foreground rounded-(--composer-radius) px-4 py-3 wrap-break-word empty:hidden">
           <MessagePrimitive.Parts
             components={{ File: UserFilePart, Image: UserImagePart }}
           />
@@ -671,10 +676,10 @@ const EditComposer: FC = () => {
     >
       <ComposerPrimitive.Root className="aui-edit-composer-root border-foreground/10 focus-within:border-foreground/25 ms-auto flex w-full max-w-[85%] cursor-text flex-col rounded-(--composer-radius) border bg-(--composer-bg) transition-[border-color]">
         <ComposerPrimitive.Input
-          className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base outline-none"
+          className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-base outline-none"
           autoFocus
         />
-        <div className="aui-edit-composer-footer mx-2.5 mb-2.5 flex items-center gap-1.5 self-end">
+        <div className="aui-edit-composer-footer mx-3 mb-3 flex items-center gap-1.5 self-end">
           <ComposerPrimitive.Cancel render={<Button variant="ghost" size="sm" className="h-8 px-3" />}>Cancel
                               </ComposerPrimitive.Cancel>
           <ComposerPrimitive.Send render={<Button size="sm" className="h-8 px-3" />}>Update

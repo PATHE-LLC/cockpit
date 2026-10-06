@@ -3,61 +3,69 @@
 import { AssistantRuntimeProvider, useAui, useAuiState, useLocalRuntime } from "@assistant-ui/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Thread } from "@/components/assistant-ui/elements/thread.aui";
 import { createTaskAdapter } from "@/lib/chat/adapter";
 import { INITIAL_MESSAGES } from "@/lib/chat/initial";
-import { SUGGESTIONS } from "@/lib/chat/suggestions";
+import { newTaskIntent } from "@/lib/chat/responders";
+import { useCockpit } from "@/lib/store";
 import { ToolRouter } from "./tool-ui";
 
 function InitialPrompt({ taskId, query }: { taskId: string; query: string | undefined }) {
   const aui = useAui();
+  const ready = useAuiState((s) => s.thread.isLoading === false);
   const router = useRouter();
   const sent = useRef(false);
 
   useEffect(() => {
-    if (!query || sent.current) return;
+    if (!query || !ready || sent.current) return;
     sent.current = true;
     router.replace(`/tasks/${taskId}`, { scroll: false });
+    if (taskId === "intake" && newTaskIntent(query)?.bare) return;
     aui.thread().append(query);
-  }, [aui, query, router, taskId]);
+  }, [aui, query, ready, router, taskId]);
 
   return null;
 }
 
-function QuickActions({ prompts }: { prompts: string[] }) {
-  const aui = useAui();
-  const running = useAuiState((s) => s.thread.isRunning);
-  if (running) return null;
-  return (
-    <Suggestions aria-label="Suggested replies" className="px-0.5">
-      {prompts.map((p) => (
-        <Suggestion key={p} suggestion={p} onClick={(text) => aui.thread().append(text)} />
-      ))}
-    </Suggestions>
-  );
-}
-
 const Passthrough = ({ children }: { children?: React.ReactNode }) => <>{children}</>;
 
-export function ChatPane({ taskId, query }: { taskId: string; query?: string }) {
+const NoSuggestions = () => null;
+
+function IntakeHandoff({ taskId }: { taskId: string }) {
+  const handoff = useCockpit((s) => s.intakeHandoff);
+  const clear = useCockpit((s) => s.clearIntakeHandoff);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!handoff || taskId === "intake") return;
+    const text = handoff;
+    clear();
+    router.push(`/tasks/intake?q=${encodeURIComponent(text)}`);
+  }, [clear, handoff, router, taskId]);
+
+  return null;
+}
+
+export function ChatPane({ taskId, query, flush = false }: { taskId: string; query?: string; flush?: boolean }) {
   const adapter = useMemo(() => createTaskAdapter(taskId), [taskId]);
-  const suggestions = SUGGESTIONS[taskId] ?? SUGGESTIONS.ask;
+
+  useEffect(() => {
+    if (taskId !== "intake") return;
+    const { intake, setIntake } = useCockpit.getState();
+    if (!intake.phase) setIntake({ phase: "what", what: "", who: "" });
+  }, [taskId]);
 
   const runtime = useLocalRuntime(adapter, {
     initialMessages: INITIAL_MESSAGES[taskId] ?? INITIAL_MESSAGES.ask,
   });
-  const Followups = useMemo(
-    () => function Followups() {
-      return <QuickActions prompts={suggestions} />;
-    },
-    [suggestions],
-  );
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <InitialPrompt taskId={taskId} query={query} />
-      <Thread autoFocus={false} components={{ ToolFallback: ToolRouter, ToolGroup: Passthrough, FollowupSuggestions: Followups }} />
+      <div className="flex h-full min-h-0 flex-1 flex-col" data-tour="task-chat">
+        <InitialPrompt taskId={taskId} query={query} />
+        <IntakeHandoff taskId={taskId} />
+        <Thread flush={flush} autoFocus={false} components={{ ToolFallback: ToolRouter, ToolGroup: Passthrough, FollowupSuggestions: NoSuggestions }} />
+      </div>
     </AssistantRuntimeProvider>
   );
 }

@@ -6,7 +6,7 @@ import type { Citation } from "@/lib/demo/types";
 import { cn } from "@/lib/utils";
 
 export function PaneScroll({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("min-h-0 flex-1 overflow-y-auto p-4 sm:p-5", className)}>{children}</div>;
+  return <div className={cn("edge-scroll min-h-0 flex-1 overflow-y-auto p-4 sm:p-5", className)}>{children}</div>;
 }
 
 export function CitationList({ citations }: { citations: Citation[] }) {
@@ -16,7 +16,7 @@ export function CitationList({ citations }: { citations: Citation[] }) {
         <li
           key={c.id}
           style={{ "--i": i } as React.CSSProperties}
-          className="rounded-xl border bg-card p-3.5"
+          className="py-2"
         >
           <div className="flex items-start gap-3">
             <span

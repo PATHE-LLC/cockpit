@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TooltipProvider delay={300}>
             <AppShell>{children}</AppShell>
-            <Toaster position="bottom-right" />
+            <Toaster position="top-center" />
           </TooltipProvider>
         </ThemeProvider>
       </body>
