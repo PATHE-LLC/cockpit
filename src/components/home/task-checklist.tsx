@@ -25,22 +25,32 @@ export function NewTaskInline({ className }: { className?: string }) {
   const addTask = useCockpit((s) => s.addTask);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [focusTick, setFocusTick] = useState(0);
   const slotRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    inputRef.current?.focus();
     slotRef.current?.scrollIntoView({ block: "nearest" });
-  }, [open]);
+  }, [open, focusTick]);
 
   const close = () => {
     setTitle("");
     setOpen(false);
   };
 
+  const leaveIfEmpty = (next: EventTarget | null) => {
+    if (next instanceof Node && slotRef.current?.contains(next)) return;
+    if (title.trim()) return;
+    close();
+  };
+
   if (open) {
     return (
       <div
         ref={slotRef}
+        onBlur={(e) => leaveIfEmpty(e.relatedTarget)}
         className={cn(
           "flex items-start gap-3 rounded-xl bg-muted/30 px-2 py-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150 sm:px-3",
           className,
@@ -55,7 +65,9 @@ export function NewTaskInline({ className }: { className?: string }) {
             if (!next) return;
             addTask({ title: next, summary: "", due: "", project: "" });
             playClick();
-            close();
+            setTitle("");
+            inputRef.current?.focus();
+            setFocusTick((n) => n + 1);
           }}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
@@ -64,18 +76,17 @@ export function NewTaskInline({ className }: { className?: string }) {
           }}
         >
           <label htmlFor="inline-task-name" className="sr-only">
-            Name
+            New task
           </label>
           <input
+            ref={inputRef}
             id="inline-task-name"
             name="name"
             autoComplete="off"
-            autoFocus
-            required
             value={title}
-            placeholder="Name"
+            placeholder="New task"
             onChange={(e) => setTitle(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-[15px] leading-5 font-medium text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+            className="m-0 h-5 min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] leading-5 font-medium text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
           />
           <button
             type="button"
