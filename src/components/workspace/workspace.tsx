@@ -3,7 +3,7 @@
 import { CheckIcon, MoreHorizontalIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import type { Task } from "@/lib/demo/types";
+import { DeleteTaskDialog } from "@/components/tasks/delete-task-dialog";
 import { playCue } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ function TaskHeader({ task, open }: { task: Task; open: boolean }) {
   const remove = useCockpit((s) => s.deleteTask);
   const openTaskForm = useCockpit((s) => s.openTaskForm);
   const router = useRouter();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
     <div className={cn("flex flex-col gap-2 py-2", open && "px-6")}>
@@ -124,13 +126,7 @@ function TaskHeader({ task, open }: { task: Task; open: boolean }) {
                 {discarded ? (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => {
-                        remove(task.id);
-                        router.push("/tasks?archive=1");
-                      }}
-                    >
+                    <DropdownMenuItem variant="destructive" onClick={() => setConfirmingDelete(true)}>
                       Delete
                     </DropdownMenuItem>
                   </>
@@ -144,13 +140,22 @@ function TaskHeader({ task, open }: { task: Task; open: boolean }) {
               onClick={() => {
                 const next = !done;
                 toggle(task.id, next);
-                if (next) playCue("done");
+                playCue("done");
               }}
             >
               <CheckIcon aria-hidden /> {done ? "Done" : "Mark done"}
             </Button>
           </div>
         </div>
+        <DeleteTaskDialog
+          open={confirmingDelete}
+          taskTitle={task.title}
+          onOpenChange={setConfirmingDelete}
+          onConfirm={() => {
+            remove(task.id);
+            router.push("/tasks?archive=1");
+          }}
+        />
     </div>
   );
 }

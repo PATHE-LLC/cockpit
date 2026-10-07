@@ -1,12 +1,11 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { playClick } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
-
-const STORAGE_KEY = "cockpit-tour";
 
 type Step = {
   path: string;
@@ -116,28 +115,46 @@ function spotlightRect(primary: Element) {
 }
 
 export function TeamTour() {
+  return (
+    <Suspense fallback={null}>
+      <TeamTourInner />
+    </Suspense>
+  );
+}
+
+function TeamTourInner() {
   const router = useRouter();
   const pathname = usePathname();
+  const search = useSearchParams();
+  const tourOn = search.get("tour") === "1";
   const [step, setStep] = useState<number | null>(null);
   const [box, setBox] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardBox, setCardBox] = useState({ width: 340, height: 168 });
+  const dismissed = useRef(false);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved === "off") return;
-    const n = saved == null ? 0 : Number(saved);
-    setStep(Number.isFinite(n) && n >= 0 && n < STEPS.length ? n : 0);
-  }, []);
+    if (!tourOn) {
+      dismissed.current = false;
+      return;
+    }
+    if (dismissed.current) return;
+    setStep(0);
+  }, [tourOn]);
 
-  const end = useCallback((index: number | null) => {
-    sessionStorage.setItem(STORAGE_KEY, "off");
+  const end = useCallback(() => {
+    playClick();
+    dismissed.current = true;
     settle(null);
     setStep(null);
     setBox(null);
     document.documentElement.removeAttribute("data-tour");
-    if (index != null) sessionStorage.setItem(STORAGE_KEY, "off");
-  }, []);
+    if (search.get("tour") !== "1") return;
+    const params = new URLSearchParams(search.toString());
+    params.delete("tour");
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  }, [pathname, router, search]);
 
   useEffect(() => {
     if (step == null) {
@@ -145,7 +162,6 @@ export function TeamTour() {
       return;
     }
     document.documentElement.setAttribute("data-tour", String(step));
-    sessionStorage.setItem(STORAGE_KEY, String(step));
   }, [step]);
 
   useEffect(() => {
@@ -250,19 +266,33 @@ export function TeamTour() {
         </p>
         <p className="mt-2 text-sm leading-relaxed">{current.line}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={() => end(step)}>
+          <Button variant="ghost" size="sm" onClick={end}>
             Skip
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={step === 0} onClick={() => setStep((n) => (n == null ? n : n - 1))}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={step === 0}
+              onClick={() => {
+                playClick();
+                setStep((n) => (n == null ? n : n - 1));
+              }}
+            >
               Back
             </Button>
             {step === STEPS.length - 1 ? (
-              <Button size="sm" onClick={() => end(step)}>
+              <Button size="sm" onClick={end}>
                 Done
               </Button>
             ) : (
-              <Button size="sm" onClick={() => setStep((n) => (n == null ? n : n + 1))}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  playClick();
+                  setStep((n) => (n == null ? n : n + 1));
+                }}
+              >
                 Next
               </Button>
             )}

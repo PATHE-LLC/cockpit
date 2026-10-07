@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BRIEFING } from "@/lib/demo/tasks";
 import { cn } from "@/lib/utils";
 
+const BRIEF_SRC = "/sounds/morning-brief.mp3";
 const BARS = Array.from({ length: 36 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -27,81 +27,58 @@ function TransportIcon({ playing }: { playing: boolean }) {
 }
 
 export function AudioSummary() {
-  const lines = BRIEFING.transcript;
-  const offsets = useMemo(() => {
-    const weights = lines.map((l) => l.length);
-    const total = weights.reduce((a, b) => a + b, 0);
-    return weights.map(
-      (_, i) => (weights.slice(0, i).reduce((a, b) => a + b, 0) / total) * BRIEFING.durationSeconds,
-    );
-  }, [lines]);
-
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const elapsedRef = useRef(0);
-
-  const lineAt = useCallback(
-    (t: number) => {
-      let idx = 0;
-      offsets.forEach((o, i) => {
-        if (t >= o) idx = i;
-      });
-      return idx;
-    },
-    [offsets],
-  );
-
-  const stopSpeech = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
-  }, []);
-
-  const speakFrom = useCallback(
-    (index: number) => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-      const synth = window.speechSynthesis;
-      synth.cancel();
-      lines.slice(index).forEach((line, i) => {
-        const u = new SpeechSynthesisUtterance(line);
-        u.rate = 1.02;
-        u.onstart = () => {
-          elapsedRef.current = offsets[index + i];
-        };
-        synth.speak(u);
-      });
-    },
-    [lines, offsets],
-  );
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    if (!playing) return;
-    const id = window.setInterval(() => {
-      elapsedRef.current = Math.min(BRIEFING.durationSeconds, elapsedRef.current + 0.25);
-      setElapsed(elapsedRef.current);
-      if (elapsedRef.current >= BRIEFING.durationSeconds) {
-        setPlaying(false);
-        stopSpeech();
-      }
-    }, 250);
-    return () => window.clearInterval(id);
-  }, [playing, stopSpeech]);
+    const audio = new Audio(BRIEF_SRC);
+    audio.preload = "auto";
+    audioRef.current = audio;
 
-  useEffect(() => stopSpeech, [stopSpeech]);
+    const syncTime = () => setElapsed(audio.currentTime || 0);
+    const syncDuration = () => {
+      if (Number.isFinite(audio.duration)) setDuration(audio.duration);
+    };
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onEnded = () => {
+      setPlaying(false);
+      setElapsed(Number.isFinite(audio.duration) ? audio.duration : audio.currentTime || 0);
+    };
+
+    audio.addEventListener("timeupdate", syncTime);
+    audio.addEventListener("loadedmetadata", syncDuration);
+    audio.addEventListener("durationchange", syncDuration);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.pause();
+      audio.removeEventListener("timeupdate", syncTime);
+      audio.removeEventListener("loadedmetadata", syncDuration);
+      audio.removeEventListener("durationchange", syncDuration);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("ended", onEnded);
+      audioRef.current = null;
+    };
+  }, []);
 
   const toggle = () => {
-    if (playing) {
-      stopSpeech();
-      setPlaying(false);
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.paused) {
+      audio.pause();
       return;
     }
-    if (elapsedRef.current >= BRIEFING.durationSeconds) {
-      elapsedRef.current = 0;
-      setElapsed(0);
-    }
-    speakFrom(lineAt(elapsedRef.current));
-    setPlaying(true);
+    if (audio.ended) audio.currentTime = 0;
+    void audio.play();
   };
 
-  const progress = elapsed / BRIEFING.durationSeconds;
+  const progress = duration > 0 ? Math.min(1, elapsed / duration) : 0;
 
   return (
     <div className="flex items-center gap-3 rounded-full border bg-card py-1.5 pr-2 pl-3" data-tour="brief">
@@ -117,14 +94,14 @@ export function AudioSummary() {
           <div className="flex items-baseline justify-between gap-2">
             <p className="truncate text-sm font-medium">Morning Brief</p>
             <p className="tabular text-xs text-muted-foreground" aria-live="off">
-              {fmt(elapsed)} / {fmt(BRIEFING.durationSeconds)}
+              {fmt(elapsed)} / {fmt(duration)}
             </p>
           </div>
           <div
             role="progressbar"
             aria-label="Morning Brief progress"
             aria-valuemin={0}
-            aria-valuemax={BRIEFING.durationSeconds}
+            aria-valuemax={Math.round(duration)}
             aria-valuenow={Math.round(elapsed)}
             className="mt-1 flex h-5 items-center gap-[2px]"
           >

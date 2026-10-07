@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { playClick } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { AutonomySheet } from "./autonomy-sheet";
@@ -37,6 +38,7 @@ export function IconRail() {
                   href={l.href}
                   aria-label={l.label}
                   aria-current={active ? "page" : undefined}
+                  onClick={() => playClick()}
                   className={cn(
                     "grid size-9 place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
                     active && "bg-accent text-foreground",
@@ -56,7 +58,17 @@ export function IconRail() {
         <Tooltip>
           <TooltipTrigger
             delay={0}
-            render={<Button variant="ghost" size="icon" aria-label="New task" onClick={() => openTaskForm()} />}
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="New task"
+                onClick={() => {
+                  playClick();
+                  openTaskForm();
+                }}
+              />
+            }
           >
             <PlusIcon className="size-4" aria-hidden />
           </TooltipTrigger>

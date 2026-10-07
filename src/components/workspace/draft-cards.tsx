@@ -8,7 +8,7 @@ import {
   MailIcon,
   PencilIcon,
   RefreshCwIcon,
-  SendHorizonalIcon,
+  ArrowUpIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -124,7 +124,7 @@ export function SlackDraftCard({ rev, flat = false }: { rev: number; flat?: bool
               }}
               disabled={!draft.trim()}
             >
-              <SendHorizonalIcon aria-hidden /> Send to #eng-backend
+              <ArrowUpIcon className="size-4" aria-hidden /> Send to #eng-backend
             </Button>
           </>
         )
@@ -203,7 +203,7 @@ export function EmailDraftCard({ rev, flat = false }: { rev: number; flat?: bool
               }}
               disabled={!email.draft.body.trim() || !email.draft.to.trim()}
             >
-              <SendHorizonalIcon aria-hidden /> Send email
+              <ArrowUpIcon className="size-4" aria-hidden /> Send email
             </Button>
           </>
         )
@@ -340,7 +340,7 @@ export function CodeReplyCard({ rev, flat = false }: { rev: number; flat?: boole
               }}
               disabled={!reply.trim()}
             >
-              <SendHorizonalIcon aria-hidden /> Send reply
+              <ArrowUpIcon className="size-4" aria-hidden /> Send reply
             </Button>
           </>
         )

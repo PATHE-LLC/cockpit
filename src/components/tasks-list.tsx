@@ -3,10 +3,12 @@
 import { ArchiveIcon, CheckIcon, InboxIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { TaskRow } from "@/components/home/task-checklist";
+import { NewTaskInline, TaskRow, useArrivedTaskIds } from "@/components/home/task-checklist";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { playClick } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
 
 type Filter = "all" | "you" | "done" | "discarded";
@@ -27,6 +29,7 @@ function TasksListInner() {
     openTaskForm();
   }, [openTaskForm, params]);
 
+  const arrived = useArrivedTaskIds(tasks.map((task) => task.id));
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tasks.filter((task) => {
@@ -53,7 +56,14 @@ function TasksListInner() {
           <h1 className="text-2xl font-semibold tracking-tight">
             {filter === "discarded" ? "Archive" : "All tasks"}
           </h1>
-          <Button variant="ghost" size="sm" onClick={() => openTaskForm()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              playClick();
+              openTaskForm();
+            }}
+          >
             <PlusIcon aria-hidden /> New task
           </Button>
         </div>
@@ -125,8 +135,19 @@ function TasksListInner() {
         ) : (
           <ul className="stagger-in mt-4 flex flex-col">
             {visible.map((task, i) => (
-              <TaskRow key={task.id} task={task} index={i} discarded={filter === "discarded"} />
+              <TaskRow
+                key={task.id}
+                task={task}
+                index={i}
+                discarded={filter === "discarded"}
+                instant={!arrived.has(task.id)}
+              />
             ))}
+            {filter !== "discarded" && (
+              <li style={{ "--i": visible.length } as React.CSSProperties}>
+                <NewTaskInline />
+              </li>
+            )}
           </ul>
         )}
       </div>
@@ -134,9 +155,37 @@ function TasksListInner() {
   );
 }
 
+const ROW_WIDTHS = ["w-2/5", "w-3/5", "w-1/2", "w-2/3", "w-1/3"];
+
+function TasksListSkeleton() {
+  return (
+    <div className="edge-scroll min-h-0 flex-1 overflow-y-auto" role="status" aria-label="Loading tasks">
+      <div className="page-column py-8 sm:py-12">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-8 w-36 motion-reduce:animate-none" />
+          <Skeleton className="h-8 w-24 motion-reduce:animate-none" />
+        </div>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-9 w-56 motion-reduce:animate-none" />
+          <Skeleton className="h-9 w-full motion-reduce:animate-none sm:w-64" />
+        </div>
+        <div className="mt-4 flex flex-col">
+          {ROW_WIDTHS.map((width) => (
+            <div key={width} className="flex items-center gap-3 px-2 py-3 sm:px-3">
+              <Skeleton className="size-5 rounded-md motion-reduce:animate-none" />
+              <Skeleton className={`h-4 motion-reduce:animate-none ${width}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <span className="sr-only">Loading tasks</span>
+    </div>
+  );
+}
+
 export function TasksList() {
   return (
-    <Suspense fallback={<div className="page-column py-12 text-sm text-muted-foreground">Loading tasks</div>}>
+    <Suspense fallback={<TasksListSkeleton />}>
       <TasksListInner />
     </Suspense>
   );
