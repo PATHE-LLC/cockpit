@@ -19,7 +19,37 @@ const STEPS: Step[] = [
   {
     path: "/",
     selector: "[data-tour=home]",
-    line: "Ask or start a task in the composer. Play the brief, or open it. Tick the checklist, or view all tasks. Hover the rail to see where each icon goes.",
+    line: "The checklist is the front door. Ask or start a task in the composer, play the brief, or tick a task. Library is on the rail.",
+  },
+  {
+    path: "/library",
+    selector: "[data-tour=library]",
+    line: "Library is the shared shelf: company, clients, projects, and documents.",
+  },
+  {
+    path: "/library/company",
+    selector: "[data-tour=company]",
+    line: "Company holds the playbook. An SOP is just a document. Open one to edit it.",
+  },
+  {
+    path: "/library/clients/solar-light",
+    selector: "[data-tour=client]",
+    line: "Solar Light wants short decks. Website Redesign and RMA Form are their projects.",
+  },
+  {
+    path: "/library/projects/rma-form",
+    selector: "[data-tour=project]",
+    line: "A project holds its files and links, and the tasks on it. A project can also have no client.",
+  },
+  {
+    path: "/library/documents",
+    selector: "[data-tour=doc-filters]",
+    line: "Documents are files and links in one list. Filter to the company, Solar Light, or a project.",
+  },
+  {
+    path: "/chats/chat-tour",
+    selector: "[data-tour=task-chat]",
+    line: "Chats are personal. Add to checklist turns this same thread into a task. It does not start another chat.",
   },
   {
     path: "/briefing",
@@ -53,9 +83,9 @@ const STEPS: Step[] = [
   },
   {
     path: "/tasks/model-6d-self-service",
-    selector: "[data-tour=pr-pane]",
+    selector: "[data-tour=sources]",
     keep: "pr",
-    line: "Press View PR to put the pull request here. Mark done stays on the header. Archive is in the menu, and Delete only shows up after you archive, next to Restore.",
+    line: "The pills are the agent looking something up: the company SOP, the Solar Light note, and the form spec. Press View PR to put the pull request here. Mark done stays on the header. Archive is in the menu, and Delete only shows up after you archive, next to Restore.",
     prepare: () => useCockpit.getState().openArtifact("model-6d-self-service", "diff"),
   },
 ];

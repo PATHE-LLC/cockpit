@@ -41,6 +41,7 @@ export const TASKS: Task[] = [
     statusDetail: "Approve",
     prepared: ["3-file code change", "Checks passed", "Reply to Dana"],
     due: "Tomorrow",
+    project: "RMA Form",
     autonomy: "Safe code changes run in a sandbox. Pushing and PRs need your approval.",
   },
   {
@@ -69,6 +70,7 @@ export const TASKS: Task[] = [
     statusDetail: "Prototype",
     prepared: ["PRD draft", "Live prototype v2", "GitHub repo + hosted URL"],
     due: "Next week",
+    project: "3 Strands dashboard",
     autonomy: "Prototype stays frontend-only. Commits go to a feature branch and auto-deploy.",
   },
 ];

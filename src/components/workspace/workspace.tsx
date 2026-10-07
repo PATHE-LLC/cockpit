@@ -18,6 +18,7 @@ import { DeleteTaskDialog } from "@/components/tasks/delete-task-dialog";
 import { playCue } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { LibraryDocPane } from "@/components/library/doc-pane";
 import { ChatPane } from "./chat-pane";
 import { AskPane } from "./panes/ask-pane";
 import { CodePane } from "./panes/code-pane";
@@ -66,6 +67,8 @@ const useIsDesktop = () =>
   useSyncExternalStore(subscribe, () => window.matchMedia(query).matches, () => true);
 
 function Pane({ task }: { task: Task }) {
+  const pane = useCockpit((s) => s.pane[task.id]);
+  if (pane?.startsWith("doc:")) return <LibraryDocPane docId={pane.slice(4)} />;
   switch (task.kind) {
     case "slack-reply":
       return <SlackPane taskId={task.id} />;

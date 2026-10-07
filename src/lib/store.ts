@@ -19,6 +19,8 @@ import {
   type PrototypeConfig,
   type PrototypeVersion,
 } from "./demo/content";
+import type { ThreadMessageLike } from "@assistant-ui/react";
+import { LIBRARY_DOCS, SHARED_PRD_DOC } from "./demo/library";
 import { TASKS } from "./demo/tasks";
 import type { EmailDraft, Task, TaskStatus } from "./demo/types";
 import { playCue } from "./sounds";
@@ -46,11 +48,29 @@ export interface IntakeState {
 }
 
 export interface TaskDraft {
+  id?: string;
   title: string;
   requester?: string;
   summary: string;
   due: string;
   project?: string;
+}
+
+export interface LibraryDocState {
+  title: string;
+  sections: PrdSection[];
+}
+
+function seedLibraryDocs() {
+  const docs: Record<string, LibraryDocState> = {};
+  for (const doc of LIBRARY_DOCS) {
+    if (doc.kind !== "doc" || doc.id === SHARED_PRD_DOC) continue;
+    docs[doc.id] = {
+      title: doc.title,
+      sections: (doc.sections ?? []).map((section) => ({ ...section })),
+    };
+  }
+  return docs;
 }
 
 interface CockpitState {
@@ -64,6 +84,13 @@ interface CockpitState {
   tasks: Task[];
   discarded: Record<string, boolean>;
   addTask: (draft: TaskDraft) => string;
+  threads: Record<string, ThreadMessageLike[]>;
+  saveThread: (id: string, messages: ThreadMessageLike[]) => void;
+  docs: Record<string, LibraryDocState>;
+  setDocTitle: (id: string, title: string) => void;
+  setDocHeading: (id: string, sectionId: string, heading: string) => void;
+  setDocSection: (id: string, sectionId: string, body: string) => void;
+  addDocSection: (id: string, kind: "text" | "list") => void;
   updateTask: (id: string, patch: Partial<TaskDraft>) => void;
   deleteTask: (id: string) => void;
   discardTask: (id: string) => void;
@@ -167,8 +194,57 @@ export const useCockpit = create<CockpitState>((set, get) => ({
 
   tasks: TASKS.map((task) => ({ ...task, origin: "suggested" as const })),
   discarded: {},
+  threads: {},
+  saveThread: (id, messages) => set((s) => ({ threads: { ...s.threads, [id]: messages } })),
+  docs: seedLibraryDocs(),
+  setDocTitle: (id, title) =>
+    set((s) => {
+      const doc = s.docs[id];
+      if (!doc) return s;
+      return { docs: { ...s.docs, [id]: { ...doc, title } } };
+    }),
+  setDocHeading: (id, sectionId, heading) =>
+    set((s) => {
+      const doc = s.docs[id];
+      if (!doc) return s;
+      return {
+        docs: {
+          ...s.docs,
+          [id]: { ...doc, sections: doc.sections.map((section) => (section.id === sectionId ? { ...section, heading } : section)) },
+        },
+      };
+    }),
+  setDocSection: (id, sectionId, body) =>
+    set((s) => {
+      const doc = s.docs[id];
+      if (!doc) return s;
+      return {
+        docs: {
+          ...s.docs,
+          [id]: { ...doc, sections: doc.sections.map((section) => (section.id === sectionId ? { ...section, body } : section)) },
+        },
+      };
+    }),
+  addDocSection: (id, kind) =>
+    set((s) => {
+      const doc = s.docs[id];
+      if (!doc) return s;
+      return {
+        docs: {
+          ...s.docs,
+          [id]: {
+            ...doc,
+            sections: [
+              ...doc.sections,
+              { id: `sec-${Date.now().toString(36)}`, heading: kind === "list" ? "List" : "Notes", body: kind === "list" ? "1. " : "" },
+            ],
+          },
+        },
+      };
+    }),
+
   addTask: (draft) => {
-    const id = `task-${Date.now().toString(36)}`;
+    const id = draft.id ?? `task-${Date.now().toString(36)}`;
     const task: Task = {
       id,
       kind: "ad-hoc",

@@ -27,6 +27,7 @@ import {
   RLS_MIGRATION_SQL,
   WIX_CITATIONS,
 } from "@/lib/demo/content";
+import { LIBRARY_PILL_SETS, type LibraryPill } from "@/lib/demo/library";
 import { STATUS_LABEL } from "@/lib/demo/tasks";
 import { useCockpit } from "@/lib/store";
 import {
@@ -39,7 +40,7 @@ import {
 import { CodeBlock, CodeBlockCopyButton } from "@/components/ai-elements/code-block";
 import { ResponseSection } from "./response-section";
 
-type SourcePill = { label: string; href: string; kind: "doc" | "github" };
+type SourcePill = { label: string; href: string; kind: "doc" | "github" | "library"; docId?: string };
 
 const SOURCE_PILLS: Record<string, SourcePill[]> = {
   "glenn-supabase-rls": [
@@ -100,20 +101,41 @@ function PaneActions({ task }: { task: string }) {
   );
 }
 
-function SourcePills({ task }: { task: string }) {
-  const pills = SOURCE_PILLS[task] ?? [];
+function libraryPills(set: string | undefined, task: string): SourcePill[] {
+  const rows = LIBRARY_PILL_SETS[set || task] ?? [];
+  return rows.map((pill: LibraryPill) => ({
+    label: pill.label,
+    href: pill.href,
+    kind: pill.kind === "library" ? "library" : "doc",
+    docId: pill.docId,
+  }));
+}
+
+function SourcePills({ task, set }: { task: string; set?: string }) {
+  const openArtifact = useCockpit((s) => s.openArtifact);
+  const pills = [...(SOURCE_PILLS[task] ?? []), ...libraryPills(set, task)];
   if (!pills.length) return null;
   return (
-    <div className="my-2 flex flex-wrap gap-1.5">
+    <div className="my-2 flex flex-wrap gap-1.5" data-tour="sources">
       {pills.map((pill) => {
         const Icon = pill.kind === "github" ? GitPullRequestIcon : FileTextIcon;
-        const external = pill.href.startsWith("http");
+        const className =
+          "inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50";
+        if (pill.kind === "library" && pill.docId) {
+          return (
+            <button key={pill.label} type="button" className={className} onClick={() => openArtifact(task, `doc:${pill.docId}`)}>
+              <Icon className="size-3.5 text-muted-foreground" aria-hidden />
+              {pill.label}
+            </button>
+          );
+        }
+        const external = pill.href.startsWith("http") || pill.href.startsWith("/");
         return (
           <a
             key={pill.label}
             href={pill.href}
             {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-            className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+            className={className}
           >
             <Icon className="size-3.5 text-muted-foreground" aria-hidden />
             {pill.label}
@@ -363,7 +385,7 @@ export const ToolRouter: ToolCallMessagePartComponent = ({ toolName, args }) => 
     case "pane_actions":
       return <PaneActions task={String(a.task ?? "")} />;
     case "source_pills":
-      return <SourcePills task={String(a.task ?? "")} />;
+      return <SourcePills task={String(a.task ?? "")} set={a.set ? String(a.set) : undefined} />;
     case "inline_thread":
       return <InlineThread task={String(a.task ?? "")} />;
     case "feasibility":

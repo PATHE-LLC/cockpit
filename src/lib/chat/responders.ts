@@ -6,6 +6,7 @@ import {
   LANGS,
   type Lang,
 } from "../demo/content";
+import { namedProject, projectByName } from "../demo/library";
 import { TASKS } from "../demo/tasks";
 import { useCockpit } from "../store";
 
@@ -23,7 +24,8 @@ export type ToolName =
   | "code_reply"
   | "figma_update"
   | "prototype_version"
-  | "task_links";
+  | "task_links"
+  | "source_pills";
 
 const has = (text: string, re: RegExp) => re.test(text.toLowerCase());
 
@@ -334,6 +336,29 @@ function intakeReply(text: string): Reply {
   return { text: `Added “${title}” to your checklist.` };
 }
 
+function generalChatReply(taskId: string, text: string): Reply {
+  const task = state().tasks.find((item) => item.id === taskId);
+  const named = namedProject(text);
+  if (!task) {
+    return {
+      text: named
+        ? `Still a personal chat. Add it to your checklist to track it on ${named}.`
+        : "Still a personal chat. Add it to your checklist when you want it tracked.",
+    };
+  }
+  if (named && task.project !== named) {
+    state().updateTask(taskId, { project: named });
+    const projectId = projectByName(named)?.id;
+    return projectId
+      ? {
+          text: "Opened the library for this project.",
+          tool: { name: "source_pills", args: { task: taskId, set: projectId } },
+        }
+      : { text: "It's on your checklist." };
+  }
+  return { text: "It's on your checklist." };
+}
+
 function adHocReply(text: string): Reply {
   if (has(text, /what|today|plan|priorit|first|focus/)) {
     return {
@@ -354,6 +379,7 @@ export function respond(taskId: string, text: string): Reply {
     return { text: "Starting a new task." };
   }
   if (taskId === "intake") return intakeReply(text);
+  if (taskId.startsWith("chat-")) return generalChatReply(taskId, text);
   switch (taskId) {
     case "glenn-supabase-rls":
       return slackReply(text);

@@ -52,6 +52,7 @@ export const INITIAL_MESSAGES: Record<string, ThreadMessageLike[]> = {
       text(
         "Dana asked for a self-service form so customers can update name, email, and phone from the account page, with validation on the phone number.\n\nI added `schema.ts`, `SelfServiceForm.tsx`, and `SelfServiceForm.test.tsx` on `cursor/model-6d-self-service-form`. Typecheck, lint, and the unit tests passed. Nothing is pushed.\n\nThe diff and a reply to Dana are ready. Opening a draft PR needs your approval.",
       ),
+      tool("source_pills", { task: "model-6d-self-service" }),
       tool("code_approval"),
       tool("code_reply", { rev: 0 }),
       tool("pane_actions", { task: "model-6d-self-service" }),
@@ -88,3 +89,20 @@ export const INITIAL_MESSAGES: Record<string, ThreadMessageLike[]> = {
     ),
   ],
 };
+
+export const GENERAL_CHAT_MESSAGES: ThreadMessageLike[] = [
+  assistant("g0", text("Personal chat. It stays off your checklist until you add it.")),
+];
+
+const user = (id: string, value: string): ThreadMessageLike => ({
+  id,
+  role: "user",
+  content: [text(value)],
+});
+
+/** A stable personal chat the tour can open. Add to checklist is ready. */
+export const TOUR_CHAT_MESSAGES: ThreadMessageLike[] = [
+  ...GENERAL_CHAT_MESSAGES,
+  user("g1", "Can we look at the Solar Light website redesign?"),
+  assistant("g2", text("Still a personal chat. Add it to your checklist to track it on Website Redesign.")),
+];

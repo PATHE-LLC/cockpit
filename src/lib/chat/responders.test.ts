@@ -110,6 +110,16 @@ describe("new task intake", () => {
   });
 });
 
+describe("general chat", () => {
+  it("stays off the checklist until a task is created", () => {
+    const before = useCockpit.getState().tasks.length;
+    const reply = respond("chat-demo", "Can we look at the Solar Light website redesign?");
+    expect(useCockpit.getState().tasks).toHaveLength(before);
+    expect(reply.text).toMatch(/Website Redesign/);
+    expect(reply.tool).toBeUndefined();
+  });
+});
+
 describe("3 Strands prototype task", () => {
   it("applies multiple changes in one new version", () => {
     respond("three-strands-dashboard", "make it compact with a dark theme");

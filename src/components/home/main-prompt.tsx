@@ -18,8 +18,17 @@ export function MainPrompt() {
   const go = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const id = newTaskIntent(trimmed) || !routePrompt(trimmed) ? "intake" : routePrompt(trimmed)!;
-    router.push(`/tasks/${id}?q=${encodeURIComponent(trimmed)}`);
+    if (newTaskIntent(trimmed)) {
+      router.push(`/tasks/intake?q=${encodeURIComponent(trimmed)}`);
+      return;
+    }
+    const routed = routePrompt(trimmed);
+    if (routed) {
+      router.push(`/tasks/${routed}?q=${encodeURIComponent(trimmed)}`);
+      return;
+    }
+    const id = `chat-${Date.now().toString(36)}`;
+    router.push(`/chats/${id}?q=${encodeURIComponent(trimmed)}`);
   };
 
   return (

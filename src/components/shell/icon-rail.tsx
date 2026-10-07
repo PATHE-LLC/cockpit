@@ -1,6 +1,6 @@
 "use client";
 
-import { FileTextIcon, HouseIcon, ListIcon, PlusIcon } from "lucide-react";
+import { FileTextIcon, HouseIcon, LibraryIcon, ListIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/", label: "Home", icon: HouseIcon, exact: true },
   { href: "/briefing", label: "Briefing", icon: FileTextIcon, exact: false },
   { href: "/tasks", label: "Tasks", icon: ListIcon, exact: false },
+  { href: "/library", label: "Library", icon: LibraryIcon, exact: false },
 ];
 
 export function IconRail() {

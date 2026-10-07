@@ -27,7 +27,7 @@ export interface Task {
   statusDetail: string;
   prepared: string[];
   due: string;
-  /** Free-text project. Empty on seeded tasks. */
+  /** Project name when the task sits on a project. */
   project?: string;
   autonomy: string;
   /** Seeded tasks are suggested. Tasks you add are yours. */
