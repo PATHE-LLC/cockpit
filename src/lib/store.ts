@@ -21,8 +21,9 @@ import {
   type PrototypeConfig,
   type PrototypeVersion,
 } from "./demo/content";
-import { appendOrderedItem, sectionsToContent } from "./demo/editor-content";
+import { appendOrderedItem, emptyDoc, sectionsToContent } from "./demo/editor-content";
 import { LIBRARY_DOCS, SHARED_PRD_DOC } from "./demo/library";
+import { PLACE_CONTENT, type PlaceItem, type PlaceSection } from "./demo/places";
 import { TASKS } from "./demo/tasks";
 import type { EmailDraft, Task, TaskStatus } from "./demo/types";
 import { playCue } from "./sounds";
@@ -69,10 +70,41 @@ function seedLibraryDocs() {
     if (doc.kind !== "doc" || doc.id === SHARED_PRD_DOC) continue;
     docs[doc.id] = {
       title: doc.title,
-      content: sectionsToContent(doc.title, doc.sections ?? []),
+      content: PLACE_CONTENT[doc.id] ?? sectionsToContent(doc.title, doc.sections ?? []),
     };
   }
+  for (const [id, content] of Object.entries(PLACE_CONTENT)) {
+    if (docs[id] || id === SHARED_PRD_DOC) continue;
+    docs[id] = { title: id, content };
+  }
   return docs;
+}
+
+const FAVORITE_PROJECTS_KEY = "cockpit-favorite-projects";
+const SEEDED_FAVORITES = ["cockpit-os"];
+
+let favoritesHydrated = false;
+
+function readFavoriteProjects(): string[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(FAVORITE_PROJECTS_KEY);
+    if (raw == null) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed) || parsed.some((id) => typeof id !== "string")) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeFavoriteProjects(ids: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(FAVORITE_PROJECTS_KEY, JSON.stringify(ids));
+  } catch {
+    // Private mode and quota errors leave the in-memory list intact.
+  }
 }
 
 interface CockpitState {
@@ -90,6 +122,10 @@ interface CockpitState {
   saveThread: (id: string, messages: ThreadMessageLike[]) => void;
   docs: Record<string, LibraryDocState>;
   setDocContent: (id: string, content: JSONContent) => void;
+  extraSections: PlaceSection[];
+  extraItems: PlaceItem[];
+  addSection: (placeId: string, title: string) => string;
+  addItem: (placeId: string, sectionId: string, title: string, memory?: boolean) => string;
   updateTask: (id: string, patch: Partial<TaskDraft>) => void;
   deleteTask: (id: string) => void;
   discardTask: (id: string) => void;
@@ -173,6 +209,11 @@ interface CockpitState {
   };
   applyPrototypeChange: (patch: Partial<PrototypeConfig>, label: string) => number;
   restorePrototypeVersion: (version: number) => void;
+
+  /** Project ids pinned on the rail. Cockpit OS until the user changes the list. */
+  favoriteProjects: string[];
+  toggleFavoriteProject: (id: string) => void;
+  hydrateFavorites: () => void;
 }
 
 export const useCockpit = create<CockpitState>((set, get) => ({
@@ -193,6 +234,32 @@ export const useCockpit = create<CockpitState>((set, get) => ({
   threads: {},
   saveThread: (id, messages) => set((s) => ({ threads: { ...s.threads, [id]: messages } })),
   docs: seedLibraryDocs(),
+  extraSections: [],
+  extraItems: [],
+  addSection: (placeId, title) => {
+    const id = `section-${Date.now().toString(36)}`;
+    const section: PlaceSection = { id, placeId, title, kind: "list", order: 100 };
+    set((s) => ({ extraSections: [...s.extraSections, section] }));
+    return id;
+  },
+  addItem: (placeId, sectionId, title, memory) => {
+    const id = `item-${Date.now().toString(36)}`;
+    const item: PlaceItem = {
+      id,
+      placeId,
+      sectionId,
+      title,
+      line: "New item",
+      order: 100,
+      docId: id,
+      tags: memory ? ["Note"] : undefined,
+    };
+    set((s) => ({
+      extraItems: [...s.extraItems, item],
+      docs: { ...s.docs, [id]: { title, content: emptyDoc() } },
+    }));
+    return id;
+  },
   setDocContent: (id, content) =>
     set((s) => {
       const doc = s.docs[id];
@@ -462,6 +529,23 @@ export const useCockpit = create<CockpitState>((set, get) => ({
       if (!found) return s;
       return { prototype: { ...s.prototype, config: found.config, current: version } };
     }),
+
+  favoriteProjects: SEEDED_FAVORITES,
+  toggleFavoriteProject: (id) =>
+    set((state) => {
+      const favoriteProjects = state.favoriteProjects.includes(id)
+        ? state.favoriteProjects.filter((item) => item !== id)
+        : [...state.favoriteProjects, id];
+      favoritesHydrated = true;
+      writeFavoriteProjects(favoriteProjects);
+      return { favoriteProjects };
+    }),
+  hydrateFavorites: () => {
+    if (favoritesHydrated) return;
+    favoritesHydrated = true;
+    const stored = readFavoriteProjects();
+    if (stored) set({ favoriteProjects: stored });
+  },
 }));
 
 export function resolveStatus(task: Task, completed: boolean): TaskStatus {

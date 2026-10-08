@@ -51,7 +51,37 @@
     max-height: calc(100dvh - 1rem);
   }
 
-  .simple-editor-content .tiptap.ProseMirror.simple-editor {
-    padding: 1rem 1.5rem 30vh;
-  }
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  padding: 1rem 1.5rem 30vh;
+}
+}
+
+.wiki-editor .simple-editor-wrapper {
+  display: block;
+  flex: none;
+  height: auto;
+  overflow: visible;
+}
+
+.wiki-editor .simple-editor-content {
+  display: block;
+  flex: none;
+  height: auto;
+  max-width: none;
+  overflow: visible;
+}
+
+.wiki-editor .simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: none;
+  height: auto;
+  min-height: 8rem;
+  padding: 1rem 0 1.5rem;
+}
+
+.wiki-editor .tiptap-toolbar[data-variant="fixed"] {
+  position: static;
+  height: auto;
+  border-top: none;
+  border-bottom: 1px solid var(--tt-toolbar-border-color);
+  padding-bottom: 0;
 }

@@ -24,27 +24,44 @@ function linesOf(body: string) {
     .filter(Boolean);
 }
 
+function blocksFor(section: PrdSection): JSONContent[] {
+  const content: JSONContent[] = [];
+  if (section.heading) content.push(heading(2, section.heading));
+  const lines = linesOf(section.body);
+  const numbered = lines.length > 0 && lines.every((line) => /^\d+\.\s+/.test(line));
+  const bullets = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line));
+  if (numbered || bullets) {
+    content.push({
+      type: numbered ? "orderedList" : "bulletList",
+      ...(numbered ? { attrs: { start: 1 } } : {}),
+      content: lines.map((line) => listItem(line.replace(/^(\d+\.|[-*])\s+/, ""))),
+    });
+  } else if (lines.length === 0) {
+    content.push(paragraph(""));
+  } else {
+    for (const line of lines) content.push(paragraph(line));
+  }
+  return content;
+}
+
+export function hasLeadingHeading(doc: JSONContent) {
+  const first = doc.content?.[0];
+  return first?.type === "heading" && first.attrs?.level === 1;
+}
+
+/** Body copy without a title heading. The page title stays outside the editor. */
+export function proseContent(sections: PrdSection[]): JSONContent {
+  const content = sections.flatMap(blocksFor);
+  return { type: "doc", content: content.length ? content : [paragraph("")] };
+}
+
+export function emptyDoc(): JSONContent {
+  return { type: "doc", content: [paragraph("")] };
+}
+
 /** Turn a seeded title and sections into a Tiptap document. */
 export function sectionsToContent(title: string, sections: PrdSection[]): JSONContent {
-  const content: JSONContent[] = [heading(1, title)];
-  for (const section of sections) {
-    content.push(heading(2, section.heading));
-    const lines = linesOf(section.body);
-    const numbered = lines.length > 0 && lines.every((line) => /^\d+\.\s+/.test(line));
-    const bullets = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line));
-    if (numbered || bullets) {
-      content.push({
-        type: numbered ? "orderedList" : "bulletList",
-        ...(numbered ? { attrs: { start: 1 } } : {}),
-        content: lines.map((line) => listItem(line.replace(/^(\d+\.|[-*])\s+/, ""))),
-      });
-    } else if (lines.length === 0) {
-      content.push(paragraph(""));
-    } else {
-      for (const line of lines) content.push(paragraph(line));
-    }
-  }
-  return { type: "doc", content };
+  return { type: "doc", content: [heading(1, title), ...sections.flatMap(blocksFor)] };
 }
 
 function nodeText(node: JSONContent | undefined): string {

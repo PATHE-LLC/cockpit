@@ -1,4 +1,5 @@
 import type { PrdSection } from "./content";
+import { placeShelfDocs } from "./places";
 
 export interface ClientRecord {
   id: string;
@@ -12,6 +13,8 @@ export interface ProjectRecord {
   /** Omitted when the work is internal. */
   clientId?: string;
   summary: string;
+  /** Rail mark. One per project so favorites stay distinct. */
+  emoji: string;
 }
 
 export interface LibraryDoc {
@@ -48,17 +51,26 @@ export const PROJECTS: ProjectRecord[] = [
     name: "Website Redesign",
     clientId: "solar-light",
     summary: "A shorter marketing site.",
+    emoji: "🌐",
   },
   {
     id: "rma-form",
     name: "RMA Form",
     clientId: "solar-light",
     summary: "Self-service form for Model 6D.",
+    emoji: "📋",
   },
   {
     id: "three-strands",
     name: "3 Strands dashboard",
     summary: "Internal dashboard.",
+    emoji: "📊",
+  },
+  {
+    id: "cockpit-os",
+    name: "Cockpit OS",
+    summary: "The day's work, prepared.",
+    emoji: "🎛️",
   },
 ];
 
@@ -170,6 +182,7 @@ export const LIBRARY_DOCS: LibraryDoc[] = [
     scopeId: "website-redesign",
     detail: "Figma",
     href: "https://www.figma.com/design/solar-light/homepage",
+    line: "Frames for the homepage.",
   },
   {
     id: "website-notion",
@@ -179,6 +192,7 @@ export const LIBRARY_DOCS: LibraryDoc[] = [
     scopeId: "website-redesign",
     detail: "Notion",
     href: "https://www.notion.so/solar-light-content",
+    line: "Copy for the short site.",
   },
   {
     id: "rma-spec",
@@ -204,6 +218,7 @@ export const LIBRARY_DOCS: LibraryDoc[] = [
     scopeId: "rma-form",
     detail: "Drive",
     href: "https://drive.google.com/drive/folders/rma-form-fields",
+    line: "The field list in Drive.",
   },
   {
     id: SHARED_PRD_DOC,
@@ -222,25 +237,30 @@ export const LIBRARY_DOCS: LibraryDoc[] = [
     scopeId: "three-strands",
     detail: "Prototype",
     href: "/preview/3-strands",
+    line: "Prototype v2.",
   },
+  ...placeShelfDocs().map((doc) => ({
+    ...doc,
+    kind: doc.kind,
+  })),
 ];
 
 const RMA_PILLS: LibraryPill[] = [
-  { label: "Project flow SOP", href: "/library/company?doc=project-flow", kind: "library", docId: "project-flow" },
-  { label: "Solar Light note", href: "/library/clients/solar-light?doc=solar-light-note", kind: "library", docId: "solar-light-note" },
-  { label: "Form spec", href: "/library/projects/rma-form?doc=rma-spec", kind: "library", docId: "rma-spec" },
+  { label: "Project flow SOP", href: "/library/company?section=team-processes&item=project-flow", kind: "library", docId: "project-flow" },
+  { label: "Solar Light note", href: "/library/clients/solar-light", kind: "library", docId: "solar-light-note" },
+  { label: "Form spec", href: "/library/projects/rma-form?section=rma-files&item=rma-spec", kind: "library", docId: "rma-spec" },
 ];
 
 export const LIBRARY_PILL_SETS: Record<string, LibraryPill[]> = {
   "model-6d-self-service": RMA_PILLS,
   "rma-form": RMA_PILLS,
   "website-redesign": [
-    { label: "Solar Light note", href: "/library/clients/solar-light?doc=solar-light-note", kind: "library", docId: "solar-light-note" },
-    { label: "Site map", href: "/library/projects/website-redesign?doc=site-map", kind: "library", docId: "site-map" },
+    { label: "Solar Light note", href: "/library/clients/solar-light", kind: "library", docId: "solar-light-note" },
+    { label: "Site map", href: "/library/projects/website-redesign?section=website-files&item=site-map", kind: "library", docId: "site-map" },
     { label: "Homepage frames", href: "https://www.figma.com/design/solar-light/homepage", kind: "link" },
   ],
   "three-strands": [
-    { label: "Dashboard PRD", href: "/library/projects/three-strands?doc=three-strands-prd", kind: "library", docId: SHARED_PRD_DOC },
+    { label: "Dashboard PRD", href: "/library/projects/three-strands?section=strands-files&item=three-strands-prd", kind: "library", docId: SHARED_PRD_DOC },
   ],
 };
 
@@ -267,7 +287,7 @@ export function docsFor(scopeType: LibraryDoc["scopeType"], scopeId: string) {
 }
 
 export function scopeLabel(doc: LibraryDoc) {
-  if (doc.scopeType === "company") return "Company";
+  if (doc.scopeType === "company") return "Team";
   if (doc.scopeType === "client") return clientById(doc.scopeId)?.name ?? "Client";
   return projectById(doc.scopeId)?.name ?? "Project";
 }
@@ -277,10 +297,7 @@ export function docMeta(doc: LibraryDoc) {
 }
 
 export function projectMeta(project: ProjectRecord) {
-  const where = project.clientId ? (clientById(project.clientId)?.name ?? "Client") : "Internal";
-  const count = docsFor("project", project.id).length;
-  const documents = count === 1 ? "1 document" : `${count} documents`;
-  return `${where} · ${documents}`;
+  return project.clientId ? (clientById(project.clientId)?.name ?? "Client") : "In-house";
 }
 
 export function clientMeta(clientId: string) {
@@ -291,7 +308,7 @@ export function clientMeta(clientId: string) {
 
 export const DOCUMENT_SCOPES = [
   { id: "all", label: "All" },
-  { id: "company", label: "Company" },
+  { id: "company", label: "Team" },
   { id: "client:solar-light", label: "Solar Light" },
   ...PROJECTS.map((project) => ({ id: `project:${project.id}`, label: project.name })),
 ];

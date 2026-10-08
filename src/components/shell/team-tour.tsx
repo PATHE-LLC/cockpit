@@ -11,6 +11,8 @@ type Step = {
   path: string;
   selector: string;
   line: string;
+  /** null clears a section query. A string opens that section. */
+  section?: string | null;
   keep?: "dialog" | "doc" | "pr";
   prepare?: () => void | Promise<void>;
 };
@@ -19,27 +21,44 @@ const STEPS: Step[] = [
   {
     path: "/",
     selector: "[data-tour=home]",
-    line: "The checklist is the front door. Ask or start a task in the composer, play the brief, or tick a task. Library is on the rail.",
+    line: "The checklist is the front door. Ask or start a task in the composer, play the brief, or tick a task. Library and favorite projects are on the rail.",
   },
   {
     path: "/library",
     selector: "[data-tour=library]",
-    line: "Library is the shared shelf: company, clients, projects, and documents.",
+    line: "Library is the shared shelf: Team, clients, projects, and documents.",
   },
   {
     path: "/library/company",
     selector: "[data-tour=company]",
-    line: "Company holds the playbook. An SOP is just a document. Open one to edit it.",
+    line: "Team is the playbook. Overview, Processes, and Resources open beside the list. An SOP is a document. Edit writes it, then saving returns here.",
   },
   {
     path: "/library/clients/solar-light",
     selector: "[data-tour=client]",
-    line: "Solar Light wants short decks. Website Redesign and RMA Form are their projects.",
+    line: "Solar Light wants short decks. Overview is the note. Client memory keeps the meetings and preferences.",
   },
   {
-    path: "/library/projects/rma-form",
+    path: "/library/projects/cockpit-os",
     selector: "[data-tour=project]",
-    line: "A project holds its files and links, and the tasks on it. A project can also have no client.",
+    section: null,
+    line: "A project opens as one column. The star favorites it. Cockpit OS is already on the rail. A project can have no client.",
+  },
+  {
+    path: "/library/projects/cockpit-os",
+    selector: "[data-tour=project]",
+    section: "cockpit-files",
+    line: "Open a section and the columns split. Files and links stay on the left. The writing opens on the right, under the breadcrumb.",
+  },
+  {
+    path: "/library/projects/cockpit-os",
+    selector: "[data-tour=favorites]",
+    section: "cockpit-files",
+    line: "Favorited projects sit in the middle of the rail. Each mark is that project. Hover for the name.",
+    prepare: () => {
+      const state = useCockpit.getState();
+      if (!state.favoriteProjects.includes("cockpit-os")) state.toggleFavoriteProject("cockpit-os");
+    },
   },
   {
     path: "/library/documents",
@@ -157,6 +176,7 @@ function TeamTourInner() {
   const pathname = usePathname();
   const search = useSearchParams();
   const tourOn = search.get("tour") === "1";
+  const section = search.get("section");
   const [step, setStep] = useState<number | null>(null);
   const [box, setBox] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -224,8 +244,10 @@ function TeamTourInner() {
     };
 
     const run = async () => {
-      if (pathname !== current.path) {
-        router.push(current.path);
+      const wanted = current.section;
+      const sectionOk = wanted === undefined || (wanted === null ? section == null : section === wanted);
+      if (pathname !== current.path || !sectionOk) {
+        router.push(wanted ? `${current.path}?section=${wanted}` : current.path);
         return;
       }
       settle(current);
@@ -253,7 +275,7 @@ function TeamTourInner() {
       cancelled = true;
       detach();
     };
-  }, [pathname, router, step]);
+  }, [pathname, router, section, step]);
 
   useLayoutEffect(() => {
     const node = cardRef.current;

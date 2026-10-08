@@ -1,38 +1,31 @@
 "use client";
 
-import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
-import { LibraryFrame, useLibraryQuery } from "@/components/library/library-frame";
+import { Suspense, type ReactNode } from "react";
+import { PlaceScreen, DocumentsScreen } from "@/components/library/place-view";
+import { ProjectFavorite } from "@/components/library/project-favorite";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CLIENTS,
-  DOCUMENT_SCOPES,
   PROJECTS,
   clientById,
   clientMeta,
-  docMeta,
-  docsFor,
-  docsInScope,
   projectById,
   projectMeta,
-  projectsForClient,
-  type LibraryDoc,
 } from "@/lib/demo/library";
-import { playCue } from "@/lib/sounds";
-import { useCockpit } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 function Crumbs({ items }: { items: { href: string; label: string }[] }) {
   return (
     <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-      <ol className="flex flex-wrap items-baseline gap-x-1.5">
+      <ol>
         {items.map((item, index) => {
           const current = index === items.length - 1;
+          const words = item.label.trim().split(/\s+/);
+          const last = words.pop() ?? item.label;
           return (
-            <li key={item.href} className="flex items-baseline gap-x-1.5">
-              {index > 0 ? <span aria-hidden>/</span> : null}
+            <li key={item.href} className="inline">
+              {index > 0 ? " " : null}
               <Link
                 href={item.href}
                 aria-current={current ? "page" : undefined}
@@ -41,7 +34,11 @@ function Crumbs({ items }: { items: { href: string; label: string }[] }) {
                   current && "text-foreground",
                 )}
               >
-                {item.label}
+                {words.length ? `${words.join(" ")} ` : null}
+                <span className="whitespace-nowrap">
+                  {last}
+                  {current ? null : "\u00A0/"}
+                </span>
               </Link>
             </li>
           );
@@ -51,119 +48,36 @@ function Crumbs({ items }: { items: { href: string; label: string }[] }) {
   );
 }
 
-function PageTitle({ crumbs, title }: { crumbs: { href: string; label: string }[]; title: string }) {
-  return (
-    <>
-      <Crumbs items={crumbs} />
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h1>
-    </>
-  );
-}
-
-function SectionLabel({ children }: { children: string }) {
-  return <h2 className="mt-8 text-sm font-medium text-muted-foreground">{children}</h2>;
-}
-
 function RichRow({
   title,
   meta,
   line,
   href,
-  external,
-  active,
-  onClick,
+  action,
 }: {
   title: string;
-  meta: string;
+  meta?: string;
   line?: string;
-  href?: string;
-  external?: boolean;
-  active?: boolean;
-  onClick?: () => void;
+  href: string;
+  action?: ReactNode;
 }) {
-  const className = cn(
-    "flex w-full flex-col items-start gap-0.5 rounded-xl px-2 py-3 text-left outline-none transition-colors duration-150 hover:bg-accent/60 focus-visible:ring-3 focus-visible:ring-ring/50 sm:px-3",
-    active && "bg-accent/60",
-  );
-  const body = (
-    <>
-      <span className="flex max-w-full flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="inline-flex min-w-0 items-baseline gap-1.5 text-[15px] leading-5 font-medium">
-          <span>{title}</span>
-          {external ? <ExternalLinkIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden /> : null}
-        </span>
-        <span className="text-xs text-muted-foreground">{meta}</span>
-      </span>
-      {line ? <span className="max-w-full text-sm leading-5 text-muted-foreground">{line}</span> : null}
-      {external ? <span className="sr-only">(opens in a new tab)</span> : null}
-    </>
-  );
-  if (href) {
-    return (
-      <li>
-        {external ? (
-          <a href={href} target="_blank" rel="noreferrer" className={className}>
-            {body}
-          </a>
-        ) : (
-          <Link
-            href={href}
-            onClick={() => {
-              if (href.startsWith("/tasks/")) playCue("open-task");
-            }}
-            className={className}
-          >
-            {body}
-          </Link>
+  return (
+    <li className="relative rounded-xl px-2 py-3 transition-colors duration-150 hover:bg-accent/60 sm:px-3">
+      <Link
+        href={href}
+        className={cn(
+          "flex flex-col rounded-md outline-none after:absolute after:inset-0 after:rounded-xl after:content-[''] focus-visible:after:ring-3 focus-visible:after:ring-ring/50",
+          action && "pr-8",
         )}
-      </li>
-    );
-  }
-  return (
-    <li>
-      <button type="button" onClick={onClick} className={className} aria-current={active ? "true" : undefined}>
-        {body}
-      </button>
+      >
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-[15px] leading-5 font-medium">{title}</span>
+          {meta ? <span className="text-xs text-muted-foreground">{meta}</span> : null}
+        </span>
+        {line ? <span className="text-xs text-muted-foreground">{line}</span> : null}
+      </Link>
+      {action ? <div className="absolute top-1/2 right-1 z-10 -translate-y-1/2 sm:right-2">{action}</div> : null}
     </li>
-  );
-}
-
-function DocRows({ docs }: { docs: LibraryDoc[] }) {
-  const { docId, openDoc } = useLibraryQuery();
-  if (!docs.length) {
-    return <p className="mt-4 text-sm text-muted-foreground">Nothing filed here.</p>;
-  }
-  return (
-    <ul className="mt-2">
-      {docs.map((doc) => (
-        <RichRow
-          key={doc.id}
-          title={doc.title}
-          meta={docMeta(doc)}
-          line={doc.line}
-          active={docId === doc.id}
-          {...(doc.kind === "link" && doc.href
-            ? { href: doc.href, external: true }
-            : { onClick: () => openDoc(doc.id) })}
-        />
-      ))}
-    </ul>
-  );
-}
-
-function ProjectRows({ projects, className }: { projects: typeof PROJECTS; className?: string }) {
-  return (
-    <ul className={className ?? "mt-2"}>
-      {projects.map((project) => (
-        <RichRow
-          key={project.id}
-          title={project.name}
-          meta={projectMeta(project)}
-          line={project.summary}
-          href={`/library/projects/${project.id}`}
-        />
-      ))}
-    </ul>
   );
 }
 
@@ -171,57 +85,84 @@ const library = { href: "/library", label: "Library" };
 
 function LibraryHomeInner() {
   return (
-    <LibraryFrame>
-      <div data-tour="library">
-      <h1 className="text-2xl font-semibold tracking-tight">Library</h1>
-      <ul className="mt-6">
-        <RichRow title="Company" meta="Playbook" line="Project flow, proposals, contracts, and brand." href="/library/company" />
-        <RichRow title="Clients" meta="1 client" line="Solar Light." href="/library/clients" />
-        <RichRow
-          title="Projects"
-          meta="3 projects"
-          line="Website Redesign, RMA Form, and an internal dashboard."
-          href="/library/projects"
-        />
-        <RichRow
-          title="Documents"
-          meta="Files and links"
-          line="Everything filed on the company, a client, or a project."
-          href="/library/documents"
-        />
-      </ul>
-      </div>
-    </LibraryFrame>
+    <IndexScreen title="Library" tour="library" crumbs={[]}>
+      <RichRow title="Team" meta="Playbook" line="Processes and resources." href="/library/company" />
+      <RichRow title="Clients" meta="1 client" line="Solar Light." href="/library/clients" />
+      <RichRow
+        title="Projects"
+        meta="4 projects"
+        line="Cockpit OS, Website Redesign, RMA Form, and an internal dashboard."
+        href="/library/projects"
+      />
+    </IndexScreen>
   );
 }
 
-function CompanyInner() {
+function IndexScreen({
+  title,
+  crumbs,
+  tour,
+  children,
+}: {
+  title: string;
+  crumbs: { href: string; label: string }[];
+  tour?: string;
+  children: ReactNode;
+}) {
   return (
-    <LibraryFrame>
-      <div data-tour="company">
-      <PageTitle crumbs={[library, { href: "/library/company", label: "Company" }]} title="Company" />
-      <DocRows docs={docsFor("company", "company")} />
+    <div className="edge-scroll min-h-0 flex-1 overflow-y-auto" {...(tour ? { "data-tour": tour } : {})}>
+      <div className="page-column py-8 sm:py-12">
+        <div className="px-2 sm:px-3">
+          {crumbs.length ? <Crumbs items={crumbs} /> : null}
+          <h1 className={cn("text-2xl font-semibold tracking-tight", crumbs.length && "mt-2")}>{title}</h1>
+        </div>
+        <ul className="mt-6">{children}</ul>
       </div>
-    </LibraryFrame>
+    </div>
   );
 }
 
 function ClientsInner() {
   return (
-    <LibraryFrame>
-      <PageTitle crumbs={[library, { href: "/library/clients", label: "Clients" }]} title="Clients" />
-      <ul className="mt-6">
-        {CLIENTS.map((client) => (
-          <RichRow
-            key={client.id}
-            title={client.name}
-            meta={clientMeta(client.id)}
-            line={client.note}
-            href={`/library/clients/${client.id}`}
-          />
-        ))}
-      </ul>
-    </LibraryFrame>
+    <IndexScreen title="Clients" crumbs={[library, { href: "/library/clients", label: "Clients" }]}>
+      {CLIENTS.map((client) => (
+        <RichRow
+          key={client.id}
+          title={client.name}
+          meta={clientMeta(client.id)}
+          line={client.note}
+          href={`/library/clients/${client.id}`}
+        />
+      ))}
+    </IndexScreen>
+  );
+}
+
+function ProjectsInner() {
+  return (
+    <IndexScreen title="Projects" crumbs={[library, { href: "/library/projects", label: "Projects" }]}>
+      {PROJECTS.map((project) => (
+        <RichRow
+          key={project.id}
+          title={project.name}
+          meta={projectMeta(project)}
+          line={project.summary}
+          href={`/library/projects/${project.id}`}
+          action={<ProjectFavorite id={project.id} />}
+        />
+      ))}
+    </IndexScreen>
+  );
+}
+
+function TeamInner() {
+  return (
+    <PlaceScreen
+      placeId="company"
+      title="Team"
+      tour="company"
+      crumbs={[library, { href: "/library/company", label: "Team" }]}
+    />
   );
 }
 
@@ -229,109 +170,38 @@ function ClientInner({ id }: { id: string }) {
   const client = clientById(id);
   if (!client) {
     return (
-      <LibraryFrame>
-        <PageTitle crumbs={[library, { href: "/library/clients", label: "Clients" }]} title="That client is gone" />
-      </LibraryFrame>
+      <IndexScreen title="That client is gone" crumbs={[library, { href: "/library/clients", label: "Clients" }]}>
+        {null}
+      </IndexScreen>
     );
   }
   return (
-    <LibraryFrame>
-      <div data-tour="client">
-      <PageTitle
-        crumbs={[library, { href: "/library/clients", label: "Clients" }, { href: `/library/clients/${client.id}`, label: client.name }]}
-        title={client.name}
-      />
-      <p className="mt-4 text-[15px] leading-6">{client.note}</p>
-      <SectionLabel>Projects</SectionLabel>
-      <ProjectRows projects={projectsForClient(client.id)} />
-      <SectionLabel>Documents</SectionLabel>
-      <DocRows docs={docsInScope(`client:${client.id}`)} />
-      </div>
-    </LibraryFrame>
-  );
-}
-
-function ProjectsInner() {
-  return (
-    <LibraryFrame>
-      <PageTitle crumbs={[library, { href: "/library/projects", label: "Projects" }]} title="Projects" />
-      <ProjectRows projects={PROJECTS} className="mt-6" />
-    </LibraryFrame>
+    <PlaceScreen
+      placeId={client.id}
+      title={client.name}
+      tour="client"
+      crumbs={[library, { href: "/library/clients", label: "Clients" }, { href: `/library/clients/${client.id}`, label: client.name }]}
+    />
   );
 }
 
 function ProjectInner({ id }: { id: string }) {
   const project = projectById(id);
-  const tasks = useCockpit((s) => s.tasks);
-  const discarded = useCockpit((s) => s.discarded);
-  const onProject = tasks.filter((task) => task.project === project?.name && !discarded[task.id]);
   if (!project) {
     return (
-      <LibraryFrame>
-        <PageTitle crumbs={[library, { href: "/library/projects", label: "Projects" }]} title="That project is gone" />
-      </LibraryFrame>
+      <IndexScreen title="That project is gone" crumbs={[library, { href: "/library/projects", label: "Projects" }]}>
+        {null}
+      </IndexScreen>
     );
   }
-  const client = project.clientId ? clientById(project.clientId) : undefined;
   return (
-    <LibraryFrame>
-      <div data-tour="project">
-      <PageTitle
-        crumbs={[library, { href: "/library/projects", label: "Projects" }, { href: `/library/projects/${project.id}`, label: project.name }]}
-        title={project.name}
-      />
-      <p className="mt-3 text-sm text-muted-foreground">
-        {client ? (
-          <Link href={`/library/clients/${client.id}`} className="rounded-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
-            {client.name}
-          </Link>
-        ) : (
-          "Internal"
-        )}
-        <span> · {projectMeta(project).split(" · ")[1]}</span>
-      </p>
-      <SectionLabel>Documents</SectionLabel>
-      <DocRows docs={docsFor("project", project.id)} />
-      <SectionLabel>Tasks</SectionLabel>
-      {onProject.length ? (
-        <ul className="mt-2">
-          {onProject.map((task) => (
-            <RichRow
-              key={task.id}
-              title={task.title}
-              meta={[task.statusDetail, task.due].filter(Boolean).join(" · ")}
-              href={`/tasks/${task.id}`}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-3 text-sm text-muted-foreground">No tasks on this project.</p>
-      )}
-      </div>
-    </LibraryFrame>
-  );
-}
-
-function DocumentsInner() {
-  const { scope, setScope } = useLibraryQuery();
-  const docs = docsInScope(scope);
-  return (
-    <LibraryFrame>
-      <PageTitle crumbs={[library, { href: "/library/documents", label: "Documents" }]} title="Documents" />
-      <div data-tour="doc-filters" className="mt-6">
-      <Tabs value={scope} onValueChange={(value) => setScope(String(value))}>
-        <TabsList aria-label="Show documents" className="h-auto w-full flex-wrap justify-start">
-          {DOCUMENT_SCOPES.map((item) => (
-            <TabsTrigger key={item.id} value={item.id} className="h-8 flex-none px-2 text-xs">
-              {item.label}
-              <span className="tabular-nums text-muted-foreground">{docsInScope(item.id).length}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-      </div>
-      <DocRows docs={docs} />
-    </LibraryFrame>
+    <PlaceScreen
+      placeId={project.id}
+      title={project.name}
+      tour="project"
+      crumbs={[library, { href: "/library/projects", label: "Projects" }, { href: `/library/projects/${project.id}`, label: project.name }]}
+      mark={<ProjectFavorite id={project.id} />}
+    />
   );
 }
 
@@ -341,11 +211,6 @@ function Fallback({ title }: { title: string }) {
       <div className="page-column py-8 sm:py-12">
         <Skeleton className="h-4 w-32 motion-reduce:animate-none" />
         <Skeleton className="mt-3 h-8 w-40 motion-reduce:animate-none" />
-        <div className="mt-8 flex flex-col gap-3">
-          <Skeleton className="h-12 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-12 w-full motion-reduce:animate-none" />
-          <Skeleton className="h-12 w-4/5 motion-reduce:animate-none" />
-        </div>
       </div>
       <span className="sr-only">Loading {title}</span>
     </div>
@@ -360,7 +225,7 @@ export function LibraryHome() {
   return gated("Library", <LibraryHomeInner />);
 }
 export function CompanyPage() {
-  return gated("Company", <CompanyInner />);
+  return gated("Team", <TeamInner />);
 }
 export function ClientsPage() {
   return gated("Clients", <ClientsInner />);
@@ -375,5 +240,5 @@ export function ProjectPage({ id }: { id: string }) {
   return gated("Project", <ProjectInner id={id} />);
 }
 export function DocumentsPage() {
-  return gated("Documents", <DocumentsInner />);
+  return gated("Documents", <DocumentsScreen />);
 }

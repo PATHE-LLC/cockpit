@@ -9,6 +9,7 @@ describe("library", () => {
       "Proposal SOP",
       "Contract template",
       "Brand",
+      "Overview",
     ]);
     expect(docsInScope("client:solar-light").map((doc) => doc.title)).toEqual([
       "Solar Light note",
@@ -17,6 +18,14 @@ describe("library", () => {
       "Content inventory",
       "Form spec",
       "Field list",
+      "Overview",
+      "Overview",
+      "Site kickoff",
+      "Cover",
+      "Homepage review",
+      "Scope",
+      "Field review",
+      "Phone",
     ]);
     expect(docsInScope("project:three-strands").every((doc) => doc.scopeId === "three-strands")).toBe(true);
   });
