@@ -1,3 +1,6 @@
+@import '../styles/_variables.scss';
+@import '../styles/_keyframe-animations.scss';
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -286,4 +289,24 @@
   50% {
     transform: scaleY(0.55);
   }
+}
+
+/* Tiptap toolbar and marks follow the app theme. */
+:root {
+  --tt-bg-color: var(--background);
+  --tt-toolbar-bg-color: var(--background);
+  --tt-border-color: var(--border);
+  --tt-toolbar-border-color: var(--border);
+  --tt-theme-text: var(--foreground);
+  --tt-cursor-color: var(--foreground);
+  --tt-brand-color-400: var(--primary);
+  --tt-brand-color-500: var(--primary);
+  --tt-brand-color-600: var(--primary);
+  --tt-selection-color: color-mix(in oklch, var(--primary) 28%, transparent);
+}
+
+.dark {
+  --tt-bg-color: var(--background);
+  --tt-toolbar-bg-color: var(--background);
+  --tt-toolbar-border-color: var(--border);
 }

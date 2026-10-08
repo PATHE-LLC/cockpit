@@ -1,27 +1,15 @@
 "use client";
 
-import { DocEditor } from "@/components/library/doc-editor";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { useCockpit } from "@/lib/store";
 
 export function PrdPane() {
-  const prd = useCockpit((s) => s.prd);
-  const setTitle = useCockpit((s) => s.setPrdTitle);
-  const setHeading = useCockpit((s) => s.setPrdHeading);
-  const setSection = useCockpit((s) => s.setPrdSection);
-  const addSection = useCockpit((s) => s.addPrdSection);
+  const content = useCockpit((s) => s.prd.content);
+  const setContent = useCockpit((s) => s.setPrdContent);
 
   return (
-    <DocEditor
-      titleId="prd-title"
-      title={prd.title}
-      sections={prd.sections}
-      onTitle={setTitle}
-      onHeading={setHeading}
-      onBody={setSection}
-      onAdd={addSection}
-      downloadName="3-strands-dashboard-prd.md"
-      copiedLabel="PRD copied as Markdown"
-      tour
-    />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <SimpleEditor content={content} onUpdate={setContent} tour />
+    </div>
   );
 }

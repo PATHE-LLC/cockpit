@@ -1,5 +1,7 @@
 "use client";
 
+import type { JSONContent } from "@tiptap/core";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { create } from "zustand";
 import {
   DANA_REPLY_INITIAL,
@@ -19,7 +21,7 @@ import {
   type PrototypeConfig,
   type PrototypeVersion,
 } from "./demo/content";
-import type { ThreadMessageLike } from "@assistant-ui/react";
+import { appendOrderedItem, sectionsToContent } from "./demo/editor-content";
 import { LIBRARY_DOCS, SHARED_PRD_DOC } from "./demo/library";
 import { TASKS } from "./demo/tasks";
 import type { EmailDraft, Task, TaskStatus } from "./demo/types";
@@ -58,7 +60,7 @@ export interface TaskDraft {
 
 export interface LibraryDocState {
   title: string;
-  sections: PrdSection[];
+  content: JSONContent;
 }
 
 function seedLibraryDocs() {
@@ -67,7 +69,7 @@ function seedLibraryDocs() {
     if (doc.kind !== "doc" || doc.id === SHARED_PRD_DOC) continue;
     docs[doc.id] = {
       title: doc.title,
-      sections: (doc.sections ?? []).map((section) => ({ ...section })),
+      content: sectionsToContent(doc.title, doc.sections ?? []),
     };
   }
   return docs;
@@ -87,10 +89,7 @@ interface CockpitState {
   threads: Record<string, ThreadMessageLike[]>;
   saveThread: (id: string, messages: ThreadMessageLike[]) => void;
   docs: Record<string, LibraryDocState>;
-  setDocTitle: (id: string, title: string) => void;
-  setDocHeading: (id: string, sectionId: string, heading: string) => void;
-  setDocSection: (id: string, sectionId: string, body: string) => void;
-  addDocSection: (id: string, kind: "text" | "list") => void;
+  setDocContent: (id: string, content: JSONContent) => void;
   updateTask: (id: string, patch: Partial<TaskDraft>) => void;
   deleteTask: (id: string) => void;
   discardTask: (id: string) => void;
@@ -163,11 +162,8 @@ interface CockpitState {
   figmaResolve: (id: string) => void;
   figmaAddErrorFrame: () => boolean;
 
-  prd: { title: string; sections: PrdSection[] };
-  setPrdTitle: (t: string) => void;
-  setPrdHeading: (id: string, heading: string) => void;
-  setPrdSection: (id: string, body: string) => void;
-  addPrdSection: (kind: "text" | "list") => void;
+  prd: { title: string; sections: PrdSection[]; content: JSONContent };
+  setPrdContent: (content: JSONContent) => void;
   appendRequirement: (text: string) => void;
 
   prototype: {
@@ -197,50 +193,11 @@ export const useCockpit = create<CockpitState>((set, get) => ({
   threads: {},
   saveThread: (id, messages) => set((s) => ({ threads: { ...s.threads, [id]: messages } })),
   docs: seedLibraryDocs(),
-  setDocTitle: (id, title) =>
+  setDocContent: (id, content) =>
     set((s) => {
       const doc = s.docs[id];
-      if (!doc) return s;
-      return { docs: { ...s.docs, [id]: { ...doc, title } } };
-    }),
-  setDocHeading: (id, sectionId, heading) =>
-    set((s) => {
-      const doc = s.docs[id];
-      if (!doc) return s;
-      return {
-        docs: {
-          ...s.docs,
-          [id]: { ...doc, sections: doc.sections.map((section) => (section.id === sectionId ? { ...section, heading } : section)) },
-        },
-      };
-    }),
-  setDocSection: (id, sectionId, body) =>
-    set((s) => {
-      const doc = s.docs[id];
-      if (!doc) return s;
-      return {
-        docs: {
-          ...s.docs,
-          [id]: { ...doc, sections: doc.sections.map((section) => (section.id === sectionId ? { ...section, body } : section)) },
-        },
-      };
-    }),
-  addDocSection: (id, kind) =>
-    set((s) => {
-      const doc = s.docs[id];
-      if (!doc) return s;
-      return {
-        docs: {
-          ...s.docs,
-          [id]: {
-            ...doc,
-            sections: [
-              ...doc.sections,
-              { id: `sec-${Date.now().toString(36)}`, heading: kind === "list" ? "List" : "Notes", body: kind === "list" ? "1. " : "" },
-            ],
-          },
-        },
-      };
+      if (!doc || JSON.stringify(doc.content) === JSON.stringify(content)) return s;
+      return { docs: { ...s.docs, [id]: { ...doc, content } } };
     }),
 
   addTask: (draft) => {
@@ -458,34 +415,21 @@ export const useCockpit = create<CockpitState>((set, get) => ({
     return true;
   },
 
-  prd: { title: PRD_TITLE_INITIAL, sections: PRD_SECTIONS_INITIAL },
-  setPrdTitle: (title) => set((s) => ({ prd: { ...s.prd, title } })),
-  setPrdHeading: (id, heading) =>
-    set((s) => ({
-      prd: { ...s.prd, sections: s.prd.sections.map((x) => (x.id === id ? { ...x, heading } : x)) },
-    })),
-  setPrdSection: (id, body) =>
-    set((s) => ({
-      prd: { ...s.prd, sections: s.prd.sections.map((x) => (x.id === id ? { ...x, body } : x)) },
-    })),
-  addPrdSection: (kind) =>
-    set((s) => ({
-      prd: {
-        ...s.prd,
-        sections: [
-          ...s.prd.sections,
-          {
-            id: `sec-${Date.now().toString(36)}`,
-            heading: kind === "list" ? "List" : "Notes",
-            body: kind === "list" ? "1. " : "",
-          },
-        ],
-      },
-    })),
+  prd: {
+    title: PRD_TITLE_INITIAL,
+    sections: PRD_SECTIONS_INITIAL,
+    content: sectionsToContent(PRD_TITLE_INITIAL, PRD_SECTIONS_INITIAL),
+  },
+  setPrdContent: (content) =>
+    set((s) => {
+      if (JSON.stringify(s.prd.content) === JSON.stringify(content)) return s;
+      return { prd: { ...s.prd, content } };
+    }),
   appendRequirement: (text) =>
     set((s) => ({
       prd: {
         ...s.prd,
+        content: appendOrderedItem(s.prd.content, "Requirements", text),
         sections: s.prd.sections.map((x) => {
           if (x.id !== "requirements") return x;
           const count = x.body.split("\n").filter(Boolean).length;

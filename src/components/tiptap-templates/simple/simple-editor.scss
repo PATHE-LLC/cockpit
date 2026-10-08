@@ -1,0 +1,57 @@
+.simple-editor-wrapper {
+  --tt-toolbar-height: 44px;
+  --tt-theme-text: var(--foreground);
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: inherit;
+}
+
+.simple-editor-wrapper .tiptap.ProseMirror {
+  font-family: inherit;
+  color: inherit;
+}
+
+.simple-editor-search-and-replace {
+  position: absolute;
+  top: calc(var(--tt-toolbar-height) + 0.5rem);
+  right: 0.5rem;
+  z-index: 51;
+  max-height: calc(100% - var(--tt-toolbar-height) - 1rem);
+}
+
+.simple-editor-content {
+  max-width: var(--page-column);
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1;
+  padding: 1.5rem 1.5rem 30vh;
+}
+
+@media screen and (max-width: 480px) {
+  .simple-editor-search-and-replace {
+    top: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 1rem 1.5rem 30vh;
+  }
+}

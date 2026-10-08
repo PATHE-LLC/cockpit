@@ -1,16 +1,13 @@
 "use client";
 
-import { DocEditor } from "@/components/library/doc-editor";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { PrdPane } from "@/components/workspace/panes/prd-pane";
-import { DOC_BY_ID, SHARED_PRD_DOC } from "@/lib/demo/library";
+import { SHARED_PRD_DOC } from "@/lib/demo/library";
 import { useCockpit } from "@/lib/store";
 
 export function LibraryDocPane({ docId }: { docId: string }) {
   const doc = useCockpit((s) => s.docs[docId]);
-  const setTitle = useCockpit((s) => s.setDocTitle);
-  const setHeading = useCockpit((s) => s.setDocHeading);
-  const setSection = useCockpit((s) => s.setDocSection);
-  const addSection = useCockpit((s) => s.addDocSection);
+  const setContent = useCockpit((s) => s.setDocContent);
 
   if (docId === SHARED_PRD_DOC) return <PrdPane />;
   if (!doc) {
@@ -21,17 +18,9 @@ export function LibraryDocPane({ docId }: { docId: string }) {
     );
   }
 
-  const known = DOC_BY_ID[docId];
   return (
-    <DocEditor
-      titleId={`doc-${docId}-title`}
-      title={doc.title}
-      sections={doc.sections}
-      onTitle={(value) => setTitle(docId, value)}
-      onHeading={(id, value) => setHeading(docId, id, value)}
-      onBody={(id, value) => setSection(docId, id, value)}
-      onAdd={(kind) => addSection(docId, kind)}
-      downloadName={`${known?.id ?? docId}.md`}
-    />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <SimpleEditor content={doc.content} onUpdate={(content) => setContent(docId, content)} tour />
+    </div>
   );
 }
