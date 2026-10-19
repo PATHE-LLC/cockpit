@@ -43,7 +43,7 @@ function Forecast() {
       <p className="text-muted-foreground tabular-nums">{time}</p>
       <p className="flex items-end gap-1.5">
         <SunIcon className="size-4 shrink-0 -translate-y-px text-amber-500" aria-hidden />
-        <span className="font-medium">40°C</span>
+        <span className="font-medium">36°C</span>
         <span className="text-muted-foreground">Clear</span>
       </p>
     </div>
