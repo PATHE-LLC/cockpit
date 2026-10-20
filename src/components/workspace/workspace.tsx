@@ -171,7 +171,7 @@ export function Workspace({ taskId, query: q }: { taskId: string; query?: string
   const close = useCockpit((s) => s.closeArtifact);
   const isDesktop = useIsDesktop();
 
-  if (task?.kind === "qa-review") return <QAWorkspace initialPrompt={q}/>;
+  if (task?.kind === "qa-review") return <QAWorkspace />;
 
   if (!task) {
     return (

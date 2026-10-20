@@ -1,10 +1,11 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   CheckCircle2Icon,
   CircleDashedIcon,
   CircleXIcon,
+  Loader2Icon,
   TriangleAlertIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ConversationEmptyState } from "@/components/ai-elements/conversation";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import type { Outcome } from "@/lib/qa/model";
+import { useQA } from "@/lib/qa/store";
 
 export const money = (value: number) => `$${value.toFixed(2)}`;
 export type EvidenceStatus = Outcome | "stale" | "not-tested";
@@ -47,21 +49,15 @@ export function QAStatus({ status }: { status: EvidenceStatus }) {
           ? CircleDashedIcon
           : TriangleAlertIcon;
   return (
-    <Badge
-      variant={
-        status === "failed"
-          ? "destructive"
-          : status === "passed"
-            ? "default"
-            : "secondary"
-      }
-    >
+    <Badge variant={status === "failed" ? "destructive" : "secondary"}>
       <Icon aria-hidden data-icon="inline-start" />
       {labels[status]}
     </Badge>
   );
 }
 export function QASelect({
+  id,
+  placeholder,
   label,
   value,
   items,
@@ -69,8 +65,10 @@ export function QASelect({
   disabled,
   className,
 }: {
+  id?: string;
+  placeholder?: string;
   label: string;
-  value: string;
+  value: string | null;
   items: { value: string; label: string }[];
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -85,8 +83,8 @@ export function QASelect({
       }}
       disabled={disabled}
     >
-      <SelectTrigger aria-label={label} className={className}>
-        <SelectValue />
+      <SelectTrigger id={id} aria-label={label} className={className}>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false}>
         <SelectGroup>
@@ -114,17 +112,15 @@ export function QADetails({
   children: ReactNode;
 }) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="data-[side=right]:w-full sm:max-w-xl">
-        <SheetHeader className="pr-14">
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>{description}</SheetDescription>
-        </SheetHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-6 pb-6">
-          {children}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
+        <DialogHeader className="pr-8">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="flex min-w-0 flex-col gap-6">{children}</div>
+      </DialogContent>
+    </Dialog>
   );
 }
 export function QAEmpty({
@@ -139,24 +135,51 @@ export function QAEmpty({
   onAction: () => void;
 }) {
   return (
-    <ConversationEmptyState
-      className="min-h-72"
-      title={title}
-      description={description}
-      icon={<CircleDashedIcon aria-hidden className="size-6" />}
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-6 py-6">
+      <h2 className="text-lg font-medium">{title}</h2>
+      <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+      <Button className="mt-2" onClick={onAction}>
+        {action}
+      </Button>
+    </div>
+  );
+}
+
+export function QAInboxButton({ disabled = false }: { disabled?: boolean }) {
+  const inbox = useQA((s) => s.inbox);
+  const [connecting, setConnecting] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={disabled || inbox || connecting}
+      onClick={() => {
+        setConnecting(true);
+        timer.current = setTimeout(() => {
+          useQA.getState().configureInbox();
+          setConnecting(false);
+          toast.success("Test inbox connected", {
+            description: "Run the delivery check again to verify it.",
+          });
+        }, 650);
+      }}
     >
-      <div className="flex max-w-md flex-col items-center gap-3">
-        <CircleDashedIcon
-          aria-hidden
-          className="mb-1 size-6 text-muted-foreground"
-        />
-        <h2 className="text-lg font-medium">{title}</h2>
-        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-        <Button variant="outline" onClick={onAction}>
-          {action}
-        </Button>
-      </div>
-    </ConversationEmptyState>
+      {connecting && (
+        <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
+      )}
+      {inbox
+        ? "Inbox connected"
+        : connecting
+          ? "Connecting…"
+          : "Connect test inbox"}
+    </Button>
   );
 }
 export function QASection({

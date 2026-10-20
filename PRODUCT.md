@@ -22,7 +22,9 @@ All execution, captures, integrations, fixes, builds, usage and approvals are lo
 
 ## Confirmed design constraints
 
-Use Cockpit's existing shadcn components and preset. The previous detached bottom chat trigger and QA-specific control overrides were rejected. QA must not be chat-first. The user values Bencho's restraint, layout and interaction quality. The requested craft references also include Linear.
+Use Cockpit's existing shadcn components and preset, including the centered dialog used by New task. Follow the home, tasks and project surfaces for hierarchy and interaction quality. QA has no AI chat and no sheet or sidebar detail layout. The store opens in a new tab; evidence stays in the main workspace. Remove unnecessary header chrome and repeated labels. Every screen must make its next action clear, with concise, plain-language copy, useful progress and confirmation toasts.
+
+Apply Impeccable's quieter principle: fewer background accents, flatter grouping, less color and purposeful motion. Preserve readable contrast and clear control affordances. The user values Bencho's restraint, layout and interaction quality; references also include Recent, Designeer and Linear.
 
 ## Evidence
 

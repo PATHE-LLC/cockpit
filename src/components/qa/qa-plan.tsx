@@ -1,17 +1,7 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import {
-  BotIcon,
-  CheckIcon,
-  ChevronRightIcon,
-  CircleHelpIcon,
-  Code2Icon,
-  MonitorIcon,
-  PlayIcon,
-  SmartphoneIcon,
-  TriangleAlertIcon,
-} from "lucide-react";
+import { useState } from "react";
+import { ChevronRightIcon, Loader2Icon, PlayIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,15 +13,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import {
   CHECKS,
   SCOPES,
   estimatedCost,
@@ -41,12 +22,18 @@ import {
   type Scope,
 } from "@/lib/qa/model";
 import { useQA } from "@/lib/qa/store";
-import { QASelect, QADetails, CheckDefinition, money } from "./qa-shared";
+import {
+  QASelect,
+  QADetails,
+  CheckDefinition,
+  QAInboxButton,
+  money,
+} from "./qa-shared";
 
 const scopeNames: Record<Scope, string> = {
-  changed: "Changed + critical",
-  risk: "Risk-based",
-  release: "Release pass",
+  changed: "Quick check",
+  risk: "Broader coverage",
+  release: "Full release check",
 };
 export function RunPlan({
   running,
@@ -61,6 +48,9 @@ export function RunPlan({
   const [showAll, setShowAll] = useState(false);
   const scope = SCOPES.find((item) => item.id === s.scope)!;
   const recommended = idsForScope(s.scope);
+  const custom =
+    recommended.length !== s.selected.length ||
+    recommended.some((id) => !s.selected.includes(id));
   const visible = CHECKS.filter(
     (check) =>
       showAll ||
@@ -71,221 +61,98 @@ export function RunPlan({
       ["Contact", "Checkout", "Cart", "Catalog"].indexOf(a.area) -
       ["Contact", "Checkout", "Cart", "Catalog"].indexOf(b.area),
   );
-  const hidden = CHECKS.length - visible.length;
   const omitted = CHECKS.filter((check) => !s.selected.includes(check.id));
   const blocked = s.selected.includes("C03") && !s.inbox;
-  const allVisible = visible.every((check) => s.selected.includes(check.id));
   const mobile = s.selected.some(
     (id) => CHECKS.find((check) => check.id === id)?.device === "Mobile",
   );
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-5 py-7 sm:px-8 sm:py-9">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 pb-8">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Choose what to test
-            </h1>
+            <h2 className="text-lg font-medium">Choose checks</h2>
             <p className="text-sm text-muted-foreground">
-              The contact form changed. Check it, and keep the buying journey
-              covered.
+              Select what to test, then start a run.
             </p>
           </div>
-          <fieldset disabled={running} className="flex min-w-0 flex-col gap-3">
-            <legend className="mb-3 text-sm font-medium">Coverage</legend>
-            <ToggleGroup
-              value={[s.scope]}
-              onValueChange={(values) => {
-                const scope = SCOPES.find((item) => item.id === values[0]);
-                if (scope) s.setScope(scope.id);
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="qa-coverage">Test coverage</Label>
+            <QASelect
+              id="qa-coverage"
+              label="Test coverage"
+              value={custom ? null : s.scope}
+              placeholder="Custom selection"
+              items={SCOPES.map((scope) => ({
+                value: scope.id,
+                label: `${scopeNames[scope.id]} · ${idsForScope(scope.id).length} checks`,
+              }))}
+              onChange={(scope) => {
+                s.setScope(scope as Scope);
               }}
-              variant="outline"
-              spacing={0}
-              aria-label="Coverage"
-              className="hidden sm:flex"
-            >
-              {SCOPES.map((scope) => (
-                <ToggleGroupItem value={scope.id} key={scope.id}>
-                  {scopeNames[scope.id]}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            <div className="sm:hidden">
-              <QASelect
-                label="Coverage"
-                value={s.scope}
-                items={SCOPES.map((scope) => ({
-                  value: scope.id,
-                  label: scopeNames[scope.id],
-                }))}
-                onChange={(scope) => s.setScope(scope as Scope)}
-                disabled={running}
-                className="w-full"
-              />
-            </div>
-            <p className="text-xs leading-5 text-muted-foreground">
-              {scope.description}
-            </p>
-          </fieldset>
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              {blocked ? (
-                <TriangleAlertIcon aria-hidden className="size-3.5" />
-              ) : (
-                <CheckIcon aria-hidden className="size-3.5" />
-              )}
-              {blocked
-                ? "Inbox not connected"
-                : s.inbox
-                  ? "Demo inbox connected"
-                  : "Guest shopper · no external account required"}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
               disabled={running}
-              onClick={() => setSetup(true)}
-            >
-              {blocked ? "Set up inbox" : "Run environment"}
-            </Button>
+              className="w-full sm:w-64"
+            />
+            <p className="text-xs leading-5 text-muted-foreground">
+              {custom
+                ? "Choose a preset to replace your selection."
+                : scope.description}
+            </p>
           </div>
-          <div className="overflow-hidden rounded-xl border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      aria-label={
-                        allVisible
-                          ? "Deselect visible checks"
-                          : "Select visible checks"
-                      }
-                      checked={allVisible}
-                      indeterminate={
-                        !allVisible &&
-                        visible.some((check) => s.selected.includes(check.id))
-                      }
-                      disabled={running}
-                      onCheckedChange={() =>
-                        visible.forEach((check) => {
-                          if (s.selected.includes(check.id) === allVisible)
-                            s.toggleCheck(check.id);
-                        })
-                      }
-                    />
-                  </TableHead>
-                  <TableHead>
-                    Check{" "}
-                    <span className="ml-1 text-muted-foreground">
-                      {s.selected.length}/{CHECKS.length}
-                    </span>
-                  </TableHead>
-                  <TableHead className="hidden w-32 md:table-cell">
-                    Method
-                  </TableHead>
-                  <TableHead className="hidden w-28 lg:table-cell">
-                    Device
-                  </TableHead>
-                  <TableHead className="w-12">
-                    <span className="sr-only">Check details</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visible.map((check, index) => (
-                  <Fragment key={check.id}>
-                    {(index === 0 ||
-                      visible[index - 1].area !== check.area) && (
-                      <TableRow className="bg-muted/40">
-                        <TableCell colSpan={5} className="py-2">
-                          <span className="text-xs font-medium text-muted-foreground">
-                            {check.area}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    <TableRow>
-                      <TableCell>
-                        <Checkbox
-                          id={`check-${check.id}`}
-                          checked={s.selected.includes(check.id)}
-                          disabled={running}
-                          onCheckedChange={() => s.toggleCheck(check.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="whitespace-normal">
-                        <Label
-                          htmlFor={`check-${check.id}`}
-                          className="cursor-pointer font-normal leading-5"
-                        >
-                          {check.title}
-                        </Label>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {check.runner === "AI browser" ? (
-                            <BotIcon aria-hidden className="size-3.5" />
-                          ) : (
-                            <Code2Icon aria-hidden className="size-3.5" />
-                          )}
-                          {check.runner === "AI browser"
-                            ? "AI-assisted"
-                            : "Coded"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {check.device === "Mobile" ? (
-                            <SmartphoneIcon aria-hidden className="size-3.5" />
-                          ) : (
-                            <MonitorIcon aria-hidden className="size-3.5" />
-                          )}
-                          {check.device}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label={`View details for ${check.title}`}
-                          onClick={() => setInspect(check)}
-                        >
-                          <ChevronRightIcon aria-hidden />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </Fragment>
-                ))}
-              </TableBody>
-            </Table>
-            {hidden > 0 && (
-              <div className="flex justify-center border-t px-3 py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={running}
-                  onClick={() => setShowAll(true)}
-                >
-                  Show {hidden} more checks
-                </Button>
-              </div>
-            )}
-            {showAll && s.scope !== "release" && (
-              <div className="flex justify-center border-t px-3 py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAll(false)}
-                >
-                  Show recommended checks
-                </Button>
+          <div>
+            <div className="flex items-center justify-between gap-3 border-b pb-3 text-xs text-muted-foreground">
+              <span>Checklist</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={running}
+                onClick={() => setShowAll(!showAll)}
+              >
+                {showAll
+                  ? "Show suggested checks"
+                  : `Edit all ${CHECKS.length} checks`}
+              </Button>
+            </div>
+            <ul className="flex flex-col divide-y">
+              {visible.map((check) => (
+                <li key={check.id} className="flex items-center gap-3 py-3">
+                  <Checkbox
+                    id={`check-${check.id}`}
+                    checked={s.selected.includes(check.id)}
+                    disabled={running}
+                    onCheckedChange={() => s.toggleCheck(check.id)}
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Label
+                      htmlFor={`check-${check.id}`}
+                      className="cursor-pointer font-normal leading-5"
+                    >
+                      {check.title}
+                    </Label>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`View details for ${check.title}`}
+                    onClick={() => setInspect(check)}
+                  >
+                    <ChevronRightIcon aria-hidden />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            {blocked && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t py-4">
+                <p className="text-xs text-muted-foreground">
+                  The delivery check needs a test inbox.
+                </p>
+                <QAInboxButton disabled={running} />
               </div>
             )}
           </div>
           <Collapsible>
             <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
-              <CircleHelpIcon aria-hidden data-icon="inline-start" />
-              {omitted.length} checks excluded · coverage limits
+              What this run leaves out
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="flex flex-col gap-3 py-4 text-xs leading-5 text-muted-foreground">
@@ -307,32 +174,48 @@ export function RunPlan({
         </div>
       </div>
       <Separator />
-      <footer className="shrink-0 bg-background px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+      <footer className="shrink-0 bg-background py-4">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6">
           <div className="flex flex-col gap-1">
-            <p className="text-sm">
-              <span className="font-medium tabular-nums">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              <span className="whitespace-nowrap font-medium tabular-nums">
                 {s.selected.length} checks selected
               </span>
-              <span className="mx-2 text-muted-foreground">·</span>
-              <span className="tabular-nums">
+              <span aria-hidden className="text-muted-foreground">
+                ·
+              </span>
+              <span className="whitespace-nowrap tabular-nums">
                 {s.selected.length
-                  ? `~${estimatedMinutes(s.selected)} min`
+                  ? `About ${estimatedMinutes(s.selected)} min`
                   : "0 min"}
               </span>
-              <span className="mx-2 text-muted-foreground">·</span>
-              <span className="tabular-nums">
+              <span aria-hidden className="text-muted-foreground">
+                ·
+              </span>
+              <span className="whitespace-nowrap tabular-nums">
                 {money(estimatedCost(s.selected))} est.
               </span>
             </p>
-            <p className="text-xs text-muted-foreground">
-              Build {s.build} · Guest ·{" "}
-              {mobile ? "Desktop + mobile" : "Desktop Chrome"} · estimated AI
-              cost includes retries
-            </p>
+            <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              <span>
+                Guest · {mobile ? "Desktop + mobile" : "Desktop Chrome"}
+              </span>
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={running}
+                onClick={() => setSetup(true)}
+              >
+                Environment
+              </Button>
+            </div>
           </div>
           <Button disabled={running || !s.selected.length} onClick={onRun}>
-            <PlayIcon aria-hidden data-icon="inline-start" />
+            {running ? (
+              <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
+            ) : (
+              <PlayIcon aria-hidden data-icon="inline-start" />
+            )}
             {running ? "Running checks…" : `Run ${s.selected.length} checks`}
           </Button>
         </div>
@@ -386,15 +269,15 @@ export function RunPlan({
           <dd>Local demo shopper</dd>
           <dt className="text-muted-foreground">Test inbox</dt>
           <dd>{s.inbox ? "Connected" : "Not configured"}</dd>
+          <dt className="text-muted-foreground">AI estimate</dt>
+          <dd>Includes retries</dd>
         </dl>
         <Separator />
         <p className="text-sm leading-6 text-muted-foreground">
           Inbox delivery cannot be verified until a demo inbox is connected.
           This setup is simulated; no external account is used.
         </p>
-        <Button disabled={s.inbox || running} onClick={s.configureInbox}>
-          {s.inbox ? "Demo inbox connected" : "Connect demo inbox"}
-        </Button>
+        <QAInboxButton disabled={running} />
       </QADetails>
     </div>
   );

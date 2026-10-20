@@ -1,25 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeftIcon,
-  ChevronRightIcon,
+  CheckIcon,
+  CircleDashedIcon,
   ExternalLinkIcon,
   Loader2Icon,
   MoreHorizontalIcon,
   RotateCcwIcon,
-  SparklesIcon,
-  XIcon,
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,158 +26,86 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type QATab } from "@/lib/qa/model";
+import { CHECKS, type QATab } from "@/lib/qa/model";
 import { useQA } from "@/lib/qa/store";
-import { ContactPreview } from "./contact-preview";
-import { QAChat } from "./qa-chat";
 import { Issues, ReleaseReview, Results, RunPlan } from "./qa-panels";
 
-const titles: Record<QATab, string> = {
-  plan: "Test plan",
-  results: "Runs",
-  issues: "Issues",
-  release: "Release",
-};
-const subscribe = (change: () => void) => {
-  const media = window.matchMedia("(min-width: 1024px)");
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-};
-const desktopSnapshot = () => window.matchMedia("(min-width: 1024px)").matches;
-export function QAWorkspace({ initialPrompt }: { initialPrompt?: string }) {
+export function QAWorkspace() {
   const s = useQA();
-  const [preview, setPreview] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [ready, setReady] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [chat, setChat] = useState(Boolean(initialPrompt));
-  const desktop = useSyncExternalStore(subscribe, desktopSnapshot, () => true);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const chatTrigger = useRef<HTMLButtonElement>(null);
+  const [progress, setProgress] = useState<{
+    ids: string[];
+    completed: number;
+    build: number;
+  } | null>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const running = progress !== null;
   useEffect(() => {
-    void useQA.persist.rehydrate();
+    Promise.resolve(useQA.persist.rehydrate()).then(() => setReady(true));
+    const sync = (event: StorageEvent) => {
+      if (event.key === "cockpit-qa-v1") void useQA.persist.rehydrate();
+    };
+    window.addEventListener("storage", sync);
     return () => {
-      if (timer.current) clearTimeout(timer.current);
+      if (timer.current) clearInterval(timer.current);
+      window.removeEventListener("storage", sync);
     };
   }, []);
   const onRun = () => {
-    if (running) return;
+    if (timer.current) return;
     const { build, scope, selected, inbox } = useQA.getState();
     if (!selected.length) return;
     const plan = { build, scope, selected: [...selected], inbox };
-    setRunning(true);
-    timer.current = setTimeout(() => {
+    let completed = 0;
+    s.setTab("results");
+    setProgress({ ids: plan.selected, completed, build });
+    timer.current = setInterval(() => {
+      completed += 1;
+      if (completed < plan.selected.length) {
+        setProgress({ ids: plan.selected, completed, build });
+        return;
+      }
+      clearInterval(timer.current!);
+      timer.current = null;
       useQA.getState().run(plan);
-      setRunning(false);
-    }, 1400);
+      setProgress(null);
+      const run = useQA.getState().runs.at(-1)!;
+      const failed = run.results.filter(
+        (result) => result.outcome === "failed",
+      ).length;
+      toast.success(`Run ${run.id} complete`, {
+        description: failed
+          ? `${failed} failed check needs attention.`
+          : "Your results are ready to review.",
+      });
+    }, 420);
   };
-  const openIssues = s.issues.filter(
-    (issue) => issue.status !== "resolved",
-  ).length;
-  const work = (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div role="status" aria-live="polite">
-        {running && (
-          <div className="px-5 pt-4 sm:px-8">
-            <Alert role="presentation">
-              <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
-              <AlertTitle>Running checks on build {s.build}</AlertTitle>
-              <AlertDescription>
-                Local simulation · results preserve each attempt.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-      </div>
-      <TabsContent value="plan" className="flex min-h-0 flex-1 flex-col">
-        <RunPlan running={running} onRun={onRun} />
-      </TabsContent>
-      <TabsContent value="results" className="flex min-h-0 flex-1 flex-col">
-        <Results running={running} onRun={onRun} />
-      </TabsContent>
-      <TabsContent value="issues" className="flex min-h-0 flex-1 flex-col">
-        <Issues openPreview={() => setPreview(true)} />
-      </TabsContent>
-      <TabsContent value="release" className="flex min-h-0 flex-1 flex-col">
-        <ReleaseReview />
-      </TabsContent>
-    </div>
-  );
+  const activeTab = s.tab === "issues" ? "results" : s.tab;
   return (
-    <Sheet open={chat && !desktop} onOpenChange={setChat}>
-      <div className="flex min-h-0 flex-1 flex-col bg-background">
-        <header className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              nativeButton={false}
-              render={<Link href="/tasks" />}
-              aria-label="Back to tasks"
-              className="hidden sm:inline-flex"
-            >
-              <ArrowLeftIcon aria-hidden />
-            </Button>
-            <Avatar size="sm" className="hidden sm:flex">
-              <AvatarFallback>F</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">Forme</span>
-            <ChevronRightIcon
-              aria-hidden
-              className="size-3 text-muted-foreground"
-            />
-            <span className="text-sm text-muted-foreground">QA</span>
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              Staging · b{s.build}
-            </Badge>
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pb-6 pt-8 sm:pt-12">
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-2xl font-semibold tracking-tight">Forme QA</h1>
+            <p className="text-xs text-muted-foreground">
+              Staging · Build {s.build}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Open storefront"
-              onClick={() => setPreview(true)}
+          <div className="flex items-center gap-1">
+            <a
+              href={`/preview/forme?build=${s.build}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
             >
-              <ExternalLinkIcon aria-hidden data-icon="inline-start" />
-              <span className="hidden sm:inline">Storefront</span>
-            </Button>
-            <Button
-              ref={chatTrigger}
-              className="hidden lg:inline-flex"
-              variant={chat ? "secondary" : "outline"}
-              size="sm"
-              aria-expanded={chat}
-              onClick={() => setChat(!chat)}
-            >
-              <SparklesIcon aria-hidden data-icon="inline-start" />
-              Ask Cockpit
-            </Button>
-            <SheetTrigger
-              className="lg:hidden"
-              render={
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  aria-label="Ask Cockpit"
-                />
-              }
-            >
-              <SparklesIcon aria-hidden />
-            </SheetTrigger>
+              <span className="hidden sm:inline">Open store</span>
+              <ExternalLinkIcon aria-hidden />
+              <span className="sr-only sm:hidden">Open store in a new tab</span>
+            </a>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -200,144 +124,150 @@ export function QAWorkspace({ initialPrompt }: { initialPrompt?: string }) {
                     disabled={running}
                     onClick={() => setConfirmReset(true)}
                   >
-                    <RotateCcwIcon aria-hidden />
-                    Restart QA demo
+                    <RotateCcwIcon aria-hidden /> Restart demo
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        <Separator />
-        <Tabs
-          value={s.tab}
-          onValueChange={(value) => s.setTab(value as QATab)}
-          className="min-h-0 flex-1 gap-0"
-        >
-          <div className="flex shrink-0 items-center justify-between gap-4 overflow-x-auto px-3 py-3 sm:px-8">
-            <TabsList aria-label="QA workspace">
-              {(Object.keys(titles) as QATab[]).map((tab) => (
-                <TabsTrigger value={tab} key={tab}>
-                  {tab === "plan" ? (
-                    <>
-                      <span className="hidden sm:inline">Test plan</span>
-                      <span className="sm:hidden">Plan</span>
-                    </>
-                  ) : (
-                    titles[tab]
-                  )}
-                  {tab === "results" && s.runs.length > 0 && (
-                    <span className="text-xs tabular-nums">
-                      {s.runs.length}
-                    </span>
-                  )}
-                  {tab === "issues" && openIssues > 0 && (
-                    <span className="text-xs tabular-nums">{openIssues}</span>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
-              Local demo
-            </span>
-          </div>
-          <Separator />
-          {desktop ? (
-            <ResizablePanelGroup
-              orientation="horizontal"
-              className="min-h-0 flex-1"
-            >
-              <ResizablePanel
-                id="qa-work"
-                defaultSize={chat ? "68%" : "100%"}
-                minSize="52%"
-                className="flex min-h-0 min-w-0 flex-col"
-              >
-                {work}
-              </ResizablePanel>
-              {chat && (
-                <>
-                  <ResizableHandle aria-label="Resize Cockpit assistant" />
-                  <ResizablePanel
-                    id="qa-assistant"
-                    defaultSize="32%"
-                    minSize="320px"
-                    maxSize="48%"
-                    className="flex min-h-0 min-w-0 flex-col"
-                  >
-                    <aside
-                      aria-label="Cockpit assistant"
-                      className="flex min-h-0 flex-1 flex-col"
-                    >
-                      <div className="flex items-start justify-between gap-3 px-5 py-4">
-                        <div className="flex flex-col gap-1">
-                          <h2 className="text-sm font-medium">Cockpit</h2>
-                          <p className="text-xs text-muted-foreground">
-                            Forme · b{s.build} · {titles[s.tab]}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Close Cockpit assistant"
-                          onClick={() => {
-                            setChat(false);
-                            chatTrigger.current?.focus();
-                          }}
-                        >
-                          <XIcon aria-hidden />
-                        </Button>
-                      </div>
-                      <Separator />
-                      <QAChat initialPrompt={initialPrompt} />
-                    </aside>
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
-          ) : (
-            work
-          )}
-        </Tabs>
-        <Dialog open={confirmReset} onOpenChange={setConfirmReset}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Restart the QA demo?</DialogTitle>
-              <DialogDescription>
-                This clears local QA runs, feedback and decisions and returns to
-                build 12. Your other Cockpit work stays in place.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setConfirmReset(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  s.reset();
-                  setConfirmReset(false);
-                }}
-              >
-                Restart demo
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-        <ContactPreview
-          key={`${preview}-${s.build}`}
-          open={preview}
-          onOpenChange={setPreview}
-        />
       </div>
-      <SheetContent className="data-[side=right]:w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Cockpit</SheetTitle>
-          <SheetDescription>
-            Forme · b{s.build} · {titles[s.tab]}
-          </SheetDescription>
-        </SheetHeader>
-        <QAChat initialPrompt={initialPrompt} />
-      </SheetContent>
-    </Sheet>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => s.setTab(value as QATab)}
+        className="min-h-0 flex-1 gap-0"
+      >
+        <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pb-6">
+          <TabsList aria-label="QA workspace">
+            <TabsTrigger value="plan">Checks</TabsTrigger>
+            <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="release">Release</TabsTrigger>
+          </TabsList>
+        </div>
+        {!ready ? (
+          <div
+            className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-6"
+            aria-label="Loading QA"
+            role="status"
+          >
+            <Skeleton className="h-6 w-40" />
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+            <span className="sr-only">Loading your QA workspace…</span>
+          </div>
+        ) : (
+          <>
+            <TabsContent value="plan" className="flex min-h-0 flex-1 flex-col">
+              <RunPlan running={running} onRun={onRun} />
+            </TabsContent>
+            <TabsContent
+              value="results"
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              {progress ? (
+                <RunProgress {...progress} />
+              ) : s.tab === "issues" ? (
+                <Issues />
+              ) : (
+                <Results running={running} onRun={onRun} />
+              )}
+            </TabsContent>
+            <TabsContent
+              value="release"
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <ReleaseReview />
+            </TabsContent>
+          </>
+        )}
+      </Tabs>
+      <Dialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restart QA?</DialogTitle>
+            <DialogDescription>
+              Clear saved runs, feedback and release decisions, and return to
+              build 12.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmReset(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                s.reset();
+                setConfirmReset(false);
+                toast.success("QA restarted");
+              }}
+            >
+              Restart demo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function RunProgress({
+  ids,
+  completed,
+  build,
+}: {
+  ids: string[];
+  completed: number;
+  build: number;
+}) {
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        className="mx-auto flex max-w-3xl flex-col gap-6 px-6 pb-12"
+        aria-busy="true"
+      >
+        <div className="flex flex-col gap-2" role="status" aria-live="polite">
+          <h2 className="text-lg font-medium">Running {ids.length} checks</h2>
+          <p className="text-sm text-muted-foreground">
+            Build {build} · {completed} of {ids.length} complete
+          </p>
+        </div>
+        <Progress value={(completed / ids.length) * 100}>
+          <ProgressLabel className="sr-only">Test run progress</ProgressLabel>
+        </Progress>
+        <ul className="flex flex-col divide-y">
+          {ids.map((id, i) => (
+            <li key={id} className="flex items-center gap-3 py-4 text-sm">
+              {i < completed ? (
+                <CheckIcon aria-hidden className="size-4" />
+              ) : i === completed ? (
+                <Loader2Icon
+                  aria-hidden
+                  className="size-4 motion-safe:animate-spin"
+                />
+              ) : (
+                <CircleDashedIcon
+                  aria-hidden
+                  className="size-4 text-muted-foreground"
+                />
+              )}
+              <span className="flex-1">
+                {CHECKS.find((check) => check.id === id)?.title}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {i < completed
+                  ? "Complete"
+                  : i === completed
+                    ? "Running"
+                    : "Waiting"}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          Demo run · no live tests are executed.
+        </p>
+      </div>
+    </div>
   );
 }

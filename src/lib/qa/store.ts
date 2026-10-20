@@ -29,7 +29,6 @@ interface QAState {
   gapsAccepted: boolean;
   signoffs: string[];
   decision: { kind: "approved" | "held"; note: string; build: number } | null;
-  messages: { role: "user" | "assistant"; text: string }[];
   setTab: (tab: QATab) => void;
   setScope: (scope: Scope) => void;
   toggleCheck: (id: string) => void;
@@ -51,7 +50,6 @@ interface QAState {
   acceptGaps: (value: boolean) => void;
   signoff: (name: string) => void;
   decide: (kind: "approved" | "held", note: string) => void;
-  addMessage: (role: "user" | "assistant", text: string) => void;
 }
 
 export const useQA = create<QAState>()(
@@ -72,7 +70,6 @@ export const useQA = create<QAState>()(
       gapsAccepted: false,
       signoffs: [],
       decision: null,
-      messages: [],
       setTab: (tab) => set({ tab, evidenceOpen: false }),
       setScope: (scope) => set({ scope, selected: idsForScope(scope) }),
       toggleCheck: (id) =>
@@ -192,8 +189,6 @@ export const useQA = create<QAState>()(
         if (kind === "held" && !note.trim()) return;
         set({ decision: { kind, note, build: s.build } });
       },
-      addMessage: (role, text) =>
-        set((s) => ({ messages: [...s.messages, { role, text }] })),
     }),
     { name: "cockpit-qa-v1", skipHydration: true },
   ),

@@ -4,11 +4,11 @@ import { useState } from "react";
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
+  ChevronDownIcon,
+  CircleDashedIcon,
   ShieldCheckIcon,
-  TriangleAlertIcon,
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -16,6 +16,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +34,7 @@ import { QASection, QAStatus, money } from "./qa-shared";
 export function ReleaseReview() {
   const s = useQA();
   const [note, setNote] = useState(s.decision?.note ?? "");
+  const [hold, setHold] = useState(false);
   const blockers = releaseBlockers(s.runs, s.build, s.issues, s.flakyReviewed);
   const latest = latestResults(s.runs, s.build);
   const untested = CHECKS.filter((check) => !latest.has(check.id));
@@ -33,281 +42,269 @@ export function ReleaseReview() {
   const flaky = [...latest.values()].find(
     (item) => !item.stale && item.result.outcome === "flaky",
   );
+  const openIssue = s.issues.find((issue) => issue.status !== "resolved");
+  const needsRun = blockers.some((blocker) =>
+    /release pass|stale|failed|blocked/.test(blocker),
+  );
   const prepare = () => {
     s.setScope("release");
     s.setTab("plan");
   };
+  const next =
+    openIssue && openIssue.status !== "fixed"
+      ? "Fix the open issue"
+      : needsRun
+        ? "Choose release checks"
+        : "Review flaky check";
+  const nextAction = () => {
+    if (openIssue && openIssue.status !== "fixed") s.setTab("issues");
+    else if (needsRun) prepare();
+    else if (flaky) s.inspectResult(flaky.run.id, flaky.result.checkId);
+  };
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex max-w-5xl flex-col gap-7 px-5 py-7 sm:px-8 sm:py-9">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Release review
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Build {s.build} · Review the evidence and record a human
-                decision.
-              </p>
-            </div>
-            <Badge variant={ready ? "default" : "secondary"}>
-              {s.decision?.kind === "approved"
-                ? "Approved"
-                : s.decision?.kind === "held"
-                  ? "Held"
-                  : ready
-                    ? "Ready for a decision"
-                    : "Review required"}
-            </Badge>
-          </div>
-          <QASection
-            title="Checks and issues"
-            detail={
-              blockers.length ? `${blockers.length} to address` : "Complete"
-            }
-          >
-            {blockers.length ? (
-              <>
-                <ul className="flex flex-col gap-3">
-                  {blockers.map((blocker) => (
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="mx-auto flex max-w-3xl flex-col gap-7 px-6 pb-12">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-medium">
+            {s.decision?.kind === "approved"
+              ? `Build ${s.build} approved`
+              : s.decision?.kind === "held"
+                ? "Release on hold"
+                : "Release review"}
+          </h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {s.decision
+              ? "Decision saved locally. No deployment was triggered."
+              : blockers.length
+                ? "Finish the remaining checks before approving this build."
+                : "Review the coverage and collect sign-offs to approve this build."}
+          </p>
+          {s.decision?.note && (
+            <p className="text-sm leading-6">{s.decision.note}</p>
+          )}
+        </div>
+        {blockers.length > 0 ? (
+          <>
+            <QASection title="Before you can approve">
+              <ul className="flex flex-col gap-4">
+                {[
+                  {
+                    show: openIssue && openIssue.status !== "fixed",
+                    text: "Fix the contact form issue.",
+                  },
+                  {
+                    show: needsRun,
+                    text: `Run all 11 release checks on build ${s.build}.`,
+                  },
+                  {
+                    show: flaky && !s.flakyReviewed,
+                    text: "Review the check that passed on retry.",
+                  },
+                ]
+                  .filter((item) => item.show)
+                  .map((item) => (
                     <li
+                      key={item.text}
                       className="flex items-start gap-3 text-sm leading-6"
-                      key={blocker}
                     >
-                      <TriangleAlertIcon
+                      <CircleDashedIcon
                         aria-hidden
                         className="mt-1 size-4 shrink-0 text-muted-foreground"
                       />
-                      {blocker}
+                      {item.text}
                     </li>
                   ))}
-                </ul>
-                <div className="flex flex-wrap gap-2">
-                  {blockers.some((blocker) =>
-                    /release pass|stale|failed|blocked/.test(blocker),
-                  ) && (
-                    <Button variant="outline" size="sm" onClick={prepare}>
-                      Choose release checks{" "}
-                      <ArrowRightIcon aria-hidden data-icon="inline-end" />
-                    </Button>
-                  )}
-                  {s.issues.some((issue) => issue.status !== "resolved") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => s.setTab("issues")}
-                    >
-                      Review issue
-                    </Button>
-                  )}
-                  {flaky && !s.flakyReviewed && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        s.inspectResult(flaky.run.id, flaky.result.checkId);
-                      }}
-                    >
-                      Review flaky check
-                    </Button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p className="flex items-center gap-2 text-sm">
-                <CheckCircle2Icon aria-hidden className="size-4" />
-                The agreed release pass is complete on build {s.build}.
+              </ul>
+              <Button className="mt-2 w-fit" onClick={nextAction}>
+                {next}
+                <ArrowRightIcon aria-hidden />
+              </Button>
+            </QASection>
+          </>
+        ) : (
+          <>
+            <p className="flex items-center gap-2 text-sm">
+              <CheckCircle2Icon aria-hidden className="size-4" />
+              All 11 release checks reviewed on build {s.build}.
+            </p>
+            <QASection title="Accept coverage limits">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Desktop Chrome and a mobile viewport were tested. Real payments,
+                production email, other browsers and a full security review are
+                outside this release check.
               </p>
-            )}
-            {latest.size > 0 && (
-              <Collapsible>
-                <CollapsibleTrigger
-                  render={<Button variant="ghost" size="sm" />}
-                >
-                  View all {latest.size} check results
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex flex-col py-3">
-                    {CHECKS.map((check) => {
-                      const item = latest.get(check.id);
-                      return (
-                        <div
-                          className="flex items-center justify-between gap-3 py-2 text-xs"
-                          key={check.id}
-                        >
-                          <span>{check.title}</span>
-                          <QAStatus
-                            status={
-                              !item
-                                ? "not-tested"
-                                : item.stale
-                                  ? "stale"
-                                  : item.result.outcome
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-          </QASection>
-          <Separator />
-          <QASection
-            title="Coverage limits"
-            detail={`${untested.length} not tested`}
-          >
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              This checklist covers desktop Chrome and a mobile viewport. Real
-              payments, production email, other browsers and comprehensive
-              security testing are excluded.
-            </p>
-            {untested.length > 0 && (
-              <Collapsible>
-                <CollapsibleTrigger
-                  render={<Button variant="ghost" size="sm" />}
-                >
-                  View untested checks
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <ul className="flex flex-col gap-2 py-3 text-xs text-muted-foreground">
-                    {untested.map((check) => (
-                      <li key={check.id}>{check.title}</li>
-                    ))}
-                  </ul>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-            <label className="flex items-start gap-3 text-sm leading-6">
-              <Checkbox
-                className="mt-1"
-                checked={s.gapsAccepted}
-                onCheckedChange={s.acceptGaps}
-              />
-              I reviewed the untested areas and accept these limits for this
-              demo release.
-            </label>
-          </QASection>
-          <Separator />
-          <fieldset className="flex min-w-0 flex-col gap-4">
-            <legend className="mb-4 text-sm font-medium">
-              Reviewer sign-offs{" "}
-              <span className="ml-2 text-xs font-normal text-muted-foreground">
-                {s.signoffs.length} of 3
-              </span>
-            </legend>
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  key: "product",
-                  name: "Matt Flanagan",
-                  role: "Product & design",
-                },
-                { key: "qa", name: "Abdul", role: "Technical QA" },
-                { key: "release", name: "Abdul", role: "Release owner" },
-              ].map((person) => (
-                <label
-                  className="flex items-start gap-3 text-sm leading-6"
-                  key={person.key}
-                >
-                  <Checkbox
-                    className="mt-1"
-                    checked={s.signoffs.includes(person.key)}
-                    onCheckedChange={() => s.signoff(person.key)}
-                    disabled={blockers.length > 0}
-                  />
-                  <span>
-                    {person.name}
-                    <span className="block text-xs text-muted-foreground">
-                      {person.role}
+              <label className="flex items-start gap-3 text-sm leading-6">
+                <Checkbox
+                  className="mt-1"
+                  checked={s.gapsAccepted}
+                  onCheckedChange={s.acceptGaps}
+                />
+                I reviewed and accept these coverage limits.
+              </label>
+            </QASection>
+            <Separator />
+            <fieldset className="flex min-w-0 flex-col gap-4">
+              <legend className="mb-4 text-sm font-medium">
+                Reviewer sign-offs{" "}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {s.signoffs.length} of 3
+                </span>
+              </legend>
+              <div className="flex flex-col gap-4">
+                {[
+                  {
+                    key: "product",
+                    name: "Matt Flanagan",
+                    role: "Product & design",
+                  },
+                  { key: "qa", name: "Abdul", role: "Technical QA" },
+                  { key: "release", name: "Abdul", role: "Release owner" },
+                ].map((person) => (
+                  <label
+                    key={person.key}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <Checkbox
+                      checked={s.signoffs.includes(person.key)}
+                      onCheckedChange={() => s.signoff(person.key)}
+                    />
+                    <span>
+                      {person.name}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {person.role}
+                      </span>
                     </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Illustrative reviewer assignments. These controls simulate
-              sign-off and do not authenticate anyone.
-            </p>
-          </fieldset>
-          <Separator />
-          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Demo sign-offs only; these controls do not authenticate
+                reviewers.
+              </p>
+            </fieldset>
+            <Separator />
             <div className="flex flex-col gap-3">
-              <Label htmlFor="release-note">Decision notes</Label>
+              <Label htmlFor="release-note">
+                Decision note{" "}
+                <span className="font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
               <Textarea
                 id="release-note"
-                rows={3}
+                rows={2}
                 value={note}
-                onChange={(event) => setNote(event.target.value)}
-                placeholder="Context for approval, or a reason to hold…"
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Anything the release owner should know?"
               />
             </div>
-            <dl className="flex flex-col gap-3 text-xs">
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted-foreground">Recorded AI spend</dt>
-                <dd className="tabular-nums">
-                  {money(s.runs.reduce((n, run) => n + run.cost, 0))}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted-foreground">Runs / tokens</dt>
-                <dd className="tabular-nums">
-                  {s.runs.length} /{" "}
+            <div className="flex flex-col items-start gap-3">
+              {!ready && (
+                <p className="text-xs text-muted-foreground">
+                  {!s.gapsAccepted
+                    ? "Accept the coverage limits to continue."
+                    : `${3 - s.signoffs.length} sign-off${s.signoffs.length === 2 ? "" : "s"} still needed.`}
+                </p>
+              )}
+              <Button
+                disabled={!ready || s.decision?.kind === "approved"}
+                onClick={() => {
+                  s.decide("approved", note);
+                  toast.success(`Build ${s.build} approved`, {
+                    description:
+                      "Release decision saved. No deployment triggered.",
+                  });
+                }}
+              >
+                <ShieldCheckIcon aria-hidden />
+                {s.decision?.kind === "approved"
+                  ? "Approved"
+                  : "Approve demo release"}
+              </Button>
+            </div>
+          </>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setHold(true)}>
+            Hold release…
+          </Button>
+          <Collapsible>
+            <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
+              Evidence and usage
+              <ChevronDownIcon aria-hidden />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="flex flex-col gap-4 py-4 text-xs leading-5">
+                <p className="text-muted-foreground">
+                  {untested.length} not tested · {s.runs.length} runs ·{" "}
+                  {money(s.runs.reduce((n, run) => n + run.cost, 0))} recorded
+                  AI cost ·{" "}
                   {s.runs
                     .reduce((n, run) => n + run.tokens, 0)
-                    .toLocaleString()}
-                </dd>
+                    .toLocaleString()}{" "}
+                  tokens. Includes retries; usage is illustrative.
+                </p>
+                {CHECKS.map((check) => {
+                  const item = latest.get(check.id);
+                  return (
+                    <div
+                      key={check.id}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <span>{check.title}</span>
+                      <QAStatus
+                        status={
+                          !item
+                            ? "not-tested"
+                            : item.stale
+                              ? "stale"
+                              : item.result.outcome
+                        }
+                      />
+                    </div>
+                  );
+                })}
               </div>
-              <p className="leading-5 text-muted-foreground">
-                Illustrative usage includes all failed attempts and retries.
-              </p>
-            </dl>
-          </div>
-          {s.decision && (
-            <Alert role="status">
-              <CheckCircle2Icon aria-hidden />
-              <AlertTitle>
-                Build {s.decision.build} ·{" "}
-                {s.decision.kind === "approved"
-                  ? "Approved for demo release"
-                  : "Release held"}
-              </AlertTitle>
-              <AlertDescription>
-                {s.decision.note && <p>{s.decision.note}</p>}
-                <p>Decision saved locally. No deployment was triggered.</p>
-              </AlertDescription>
-            </Alert>
-          )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
+        <Dialog open={hold} onOpenChange={setHold}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hold this release?</DialogTitle>
+              <DialogDescription>
+                Add a reason so the next reviewer knows what needs to change.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="hold-note">Reason for holding</Label>
+              <Textarea
+                id="hold-note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="What needs to happen before release?"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setHold(false)}>
+                Cancel
+              </Button>
+              <Button
+                disabled={!note.trim()}
+                onClick={() => {
+                  s.decide("held", note);
+                  setHold(false);
+                  toast.success("Release held", {
+                    description: "Your reason has been saved.",
+                  });
+                }}
+              >
+                Hold release
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      <Separator />
-      <footer className="shrink-0 px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
-          <p className="max-w-lg text-xs leading-5 text-muted-foreground">
-            {ready
-              ? "All requirements and sign-offs are complete."
-              : "Complete checks, accept coverage limits and collect all three sign-offs to approve."}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              disabled={!note.trim()}
-              onClick={() => s.decide("held", note)}
-            >
-              Hold release
-            </Button>
-            <Button
-              disabled={!ready}
-              onClick={() => s.decide("approved", note)}
-            >
-              <ShieldCheckIcon aria-hidden data-icon="inline-start" />
-              Approve demo release
-            </Button>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -1,14 +1,15 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
+  ArrowLeftIcon,
   ArrowRightIcon,
-  CheckCircle2Icon,
   ExternalLinkIcon,
-  GitBranchIcon,
+  Loader2Icon,
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,260 +20,239 @@ import { useQA } from "@/lib/qa/store";
 import { ContactSnapshot } from "./contact-preview";
 import { QAEmpty, QASection } from "./qa-shared";
 
-export function Issues({ openPreview }: { openPreview: () => void }) {
+export function Issues() {
   const s = useQA();
+  const [working, setWorking] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   const issue = s.issues[0];
-  if (!issue)
-    return (
-      <QAEmpty
-        title="No issues yet"
-        description="Run the checks, or try the storefront and report a problem. Test findings and human feedback meet here."
-        action="Open storefront"
-        onAction={openPreview}
-      />
-    );
-  const status =
-    issue.status === "in-progress"
-      ? "In progress"
-      : issue.status === "fixed"
-        ? "Needs retest"
-        : issue.status === "resolved"
-          ? "Resolved"
-          : "Open";
-  const next = () => {
+  const prepareRetest = () => {
     s.setScope("release");
     s.setTab("plan");
   };
+  const change = (apply: boolean) => {
+    setWorking(true);
+    timer.current = setTimeout(() => {
+      if (apply) {
+        s.fix();
+        toast.success("Build 13 ready", {
+          description: "Run the checks again to verify the fix.",
+        });
+      } else {
+        s.startFix();
+        toast.success("Fix prepared");
+      }
+      setWorking(false);
+    }, 750);
+  };
+  if (!issue)
+    return (
+      <QAEmpty
+        title="No issues to fix"
+        description="Run your checks to find issues that need attention."
+        action="Choose checks"
+        onAction={() => s.setTab("plan")}
+      />
+    );
+  const status = {
+    open: "Open",
+    "in-progress": "Fix prepared",
+    fixed: "Needs retest",
+    resolved: "Resolved",
+  }[issue.status];
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-      <div className="mx-auto flex max-w-5xl flex-col gap-7 px-5 py-7 sm:px-8 sm:py-9">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex max-w-2xl flex-col gap-3">
-            <h1 className="text-xl font-semibold leading-8 tracking-tight">
-              {issue.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <Badge
-                variant={issue.status === "resolved" ? "default" : "secondary"}
-              >
-                {status}
-              </Badge>
-              <span>
-                QA-104 · Contact form · First seen in build{" "}
-                {issue.originalBuild}
-              </span>
-            </div>
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 pb-12">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          onClick={() => s.setTab("results")}
+        >
+          <ArrowLeftIcon aria-hidden /> All results
+        </Button>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">QA-104</span>
+            <Badge
+              variant={issue.status === "resolved" ? "default" : "secondary"}
+            >
+              {status}
+            </Badge>
           </div>
-          {issue.status === "open" ? (
-            <Button onClick={s.startFix}>
-              <GitBranchIcon aria-hidden data-icon="inline-start" />
-              Prepare a fix
-            </Button>
-          ) : issue.status === "in-progress" ? (
-            <Button onClick={s.fix}>
-              Apply demo fix{" "}
-              <ArrowRightIcon aria-hidden data-icon="inline-end" />
-            </Button>
-          ) : issue.status === "fixed" ? (
-            <Button onClick={next}>
-              Prepare retest{" "}
-              <ArrowRightIcon aria-hidden data-icon="inline-end" />
-            </Button>
-          ) : (
-            <Button onClick={() => s.setTab("release")}>
-              Review release{" "}
-              <ArrowRightIcon aria-hidden data-icon="inline-end" />
-            </Button>
-          )}
+          <h2 className="text-lg font-medium leading-7">{issue.title}</h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {issue.status === "fixed"
+              ? "The fix is in build 13. Run a fresh check to confirm it works."
+              : issue.status === "resolved"
+                ? "Verified on build 13. The message stays in the form after a failed request."
+                : "A failed request clears the customer's message. Keep it in the form so they can retry."}
+          </p>
         </div>
-        {issue.status === "fixed" && (
-          <Alert role="status">
-            <CheckCircle2Icon aria-hidden />
-            <AlertTitle>Fix available in build 13</AlertTitle>
-            <AlertDescription>
-              The affected evidence is stale. A passing retest is required to
-              resolve this issue.
-            </AlertDescription>
-          </Alert>
+        {issue.status === "in-progress" && (
+          <QASection title="Proposed fix">
+            <p className="text-sm text-muted-foreground">
+              Reset the form only after a successful response.
+            </p>
+            <pre className="overflow-x-auto rounded-xl bg-muted p-4 text-xs leading-7">
+              <code>
+                {
+                  "- form.reset();\n  const response = await sendMessage(values);\n+ if (response.ok) form.reset();"
+                }
+              </code>
+            </pre>
+            <p className="text-xs text-muted-foreground">
+              Applying this demo change creates build 13.
+            </p>
+          </QASection>
         )}
-        {issue.status === "resolved" && (
-          <Alert role="status">
-            <CheckCircle2Icon aria-hidden />
-            <AlertTitle>Verified on build 13</AlertTitle>
-            <AlertDescription>
-              The retest preserved the message after a failed submission.
-              Original evidence remains in history.
-            </AlertDescription>
-          </Alert>
-        )}
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="flex min-w-0 flex-col gap-7">
-            <QASection title="The problem">
-              <p className="text-sm leading-6 text-muted-foreground">
-                A failed request resets the form before the customer can retry.
-                Keep the message until the request succeeds.
-              </p>
-              <dl className="grid gap-5 text-sm leading-6 sm:grid-cols-2">
-                <div>
-                  <dt className="mb-1 text-xs text-muted-foreground">
-                    Expected
-                  </dt>
-                  <dd>The message stays in the form, ready to retry.</dd>
-                </div>
-                <div>
-                  <dt className="mb-1 text-xs text-muted-foreground">
-                    Actual · build {issue.originalBuild}
-                  </dt>
-                  <dd>The error appears and the message field is empty.</dd>
-                </div>
-              </dl>
-            </QASection>
-            {issue.status === "in-progress" && (
-              <>
-                <Separator />
-                <QASection title="Proposed fix">
-                  <p className="text-sm text-muted-foreground">
-                    Reset the form only after a successful response. Applying
-                    this change creates demo build 13.
-                  </p>
-                  <pre className="overflow-x-auto rounded-xl bg-muted p-4 text-xs leading-7">
-                    <code>
-                      {
-                        "- form.reset();\n  const response = await sendMessage(values);\n+ if (response.ok) form.reset();"
-                      }
-                    </code>
-                  </pre>
-                </QASection>
-              </>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            disabled={working}
+            onClick={() =>
+              issue.status === "open"
+                ? change(false)
+                : issue.status === "in-progress"
+                  ? change(true)
+                  : issue.status === "fixed"
+                    ? prepareRetest()
+                    : s.setTab("release")
+            }
+          >
+            {working ? (
+              <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
+            ) : (
+              <ArrowRightIcon aria-hidden />
             )}
-            <Separator />
-            <QASection
-              title="Linked evidence"
-              detail="Original report retained"
-            >
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const run = s.runs.find((run) =>
-                      run.results.some((result) => result.checkId === "C02"),
-                    );
-                    if (run) {
-                      s.inspectResult(run.id, "C02");
-                    } else openPreview();
-                  }}
-                >
-                  C02 · Failed submission{" "}
-                  <ArrowRightIcon aria-hidden data-icon="inline-end" />
-                </Button>
-                <Button variant="ghost" onClick={openPreview}>
-                  <ExternalLinkIcon aria-hidden data-icon="inline-start" />
-                  {s.feedback.length ? "Open storefront" : "Capture feedback"}
-                </Button>
-              </div>
-            </QASection>
-            <Separator />
-            <QASection
-              title="Tester feedback"
-              detail={`${s.feedback.length} linked reports`}
-            >
-              {s.feedback.length ? (
-                s.feedback.map((feedback) => (
-                  <Collapsible key={feedback.id}>
-                    <CollapsibleTrigger
-                      render={
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between whitespace-normal text-start"
-                        />
-                      }
-                    >
-                      {feedback.description}
-                      <span className="shrink-0 text-xs">{feedback.id}</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="flex flex-col gap-4 py-4 text-sm leading-6">
-                        <dl className="flex flex-col gap-3">
-                          <div>
-                            <dt className="text-xs text-muted-foreground">
-                              Expected
-                            </dt>
-                            <dd>{feedback.expected}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs text-muted-foreground">
-                              Actual
-                            </dt>
-                            <dd>{feedback.actual}</dd>
-                          </div>
-                        </dl>
-                        <p className="text-xs text-muted-foreground">
-                          Build {feedback.build} · {feedback.category} ·{" "}
-                          {feedback.page} · {feedback.device}
-                        </p>
-                        <div className="max-w-sm">
-                          <ContactSnapshot
-                            build={feedback.build}
-                            annotation={feedback.annotation}
-                          />
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No tester reports attached. Open the storefront to reproduce
-                  the failure and capture feedback.
-                </p>
-              )}
-            </QASection>
-          </div>
-          <aside aria-label="Issue history" className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-medium">Original capture</h3>
-              <p className="text-xs text-muted-foreground">
-                Build {issue.originalBuild} · /contact
-              </p>
-            </div>
-            <ContactSnapshot build={issue.originalBuild} annotation />
-            <Separator />
-            <ol className="flex flex-col gap-4 text-xs leading-5">
-              <li>
-                <p className="font-medium">Issue opened</p>
-                <p className="text-muted-foreground">
-                  Message cleared on build {issue.originalBuild}.
-                </p>
-              </li>
-              {issue.status !== "open" && (
-                <li>
-                  <p className="font-medium">Fix prepared</p>
-                  <p className="text-muted-foreground">
-                    Reset moved to the success handler.
-                  </p>
-                </li>
-              )}
-              {issue.fixedBuild && (
-                <li>
-                  <p className="font-medium">
-                    Build {issue.fixedBuild} created
-                  </p>
-                  <p className="text-muted-foreground">
-                    Affected evidence marked stale.
-                  </p>
-                </li>
-              )}
-              {issue.status === "resolved" && (
-                <li>
-                  <p className="font-medium">Retest passed</p>
-                  <p className="text-muted-foreground">
-                    Issue resolved on build 13.
-                  </p>
-                </li>
-              )}
-            </ol>
-          </aside>
+            {working
+              ? issue.status === "open"
+                ? "Preparing fix…"
+                : "Applying fix…"
+              : issue.status === "open"
+                ? "Prepare fix"
+                : issue.status === "in-progress"
+                  ? "Apply demo fix"
+                  : issue.status === "fixed"
+                    ? "Choose retest checks"
+                    : "Review release"}
+          </Button>
+          <a
+            href={`/preview/forme?build=${s.build}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ variant: "ghost" })}
+          >
+            <ExternalLinkIcon aria-hidden />
+            Try in store
+          </a>
         </div>
+        <Separator />
+        <dl className="grid gap-5 text-sm leading-6 sm:grid-cols-2">
+          <div>
+            <dt className="mb-1 text-xs text-muted-foreground">Expected</dt>
+            <dd>The message stays in the form, ready to retry.</dd>
+          </div>
+          <div>
+            <dt className="mb-1 text-xs text-muted-foreground">
+              Actual · Build {issue.originalBuild}
+            </dt>
+            <dd>The error appears and the message field is empty.</dd>
+          </div>
+        </dl>
+        <Collapsible>
+          <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
+            Original evidence and history
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-5 py-4">
+              <div className="max-w-sm">
+                <ContactSnapshot build={issue.originalBuild} annotation />
+              </div>
+              <Button
+                variant="outline"
+                className="w-fit"
+                onClick={() => {
+                  const run = s.runs.find((run) =>
+                    run.results.some((result) => result.checkId === "C02"),
+                  );
+                  if (run) s.inspectResult(run.id, "C02");
+                }}
+              >
+                View original test evidence <ArrowRightIcon aria-hidden />
+              </Button>
+              <ol className="flex flex-col gap-3 text-xs leading-5 text-muted-foreground">
+                <li>Issue opened on build {issue.originalBuild}.</li>
+                {issue.status !== "open" && (
+                  <li>Fix prepared: reset moved to the success handler.</li>
+                )}
+                {issue.fixedBuild && (
+                  <li>
+                    Build {issue.fixedBuild} created. Affected evidence marked
+                    stale.
+                  </li>
+                )}
+                {issue.status === "resolved" && (
+                  <li>Retest passed on build 13. Issue resolved.</li>
+                )}
+              </ol>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        {s.feedback.length > 0 && (
+          <QASection
+            title="Tester feedback"
+            detail={`${s.feedback.length} linked reports`}
+          >
+            {s.feedback.map((feedback) => (
+              <Collapsible key={feedback.id}>
+                <CollapsibleTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      className="h-auto w-full justify-between whitespace-normal py-3 text-start"
+                    />
+                  }
+                >
+                  {feedback.description}
+                  <span className="shrink-0 text-xs">{feedback.id}</span>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="flex flex-col gap-4 py-4 text-sm leading-6">
+                    <dl className="flex flex-col gap-3">
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Expected
+                        </dt>
+                        <dd>{feedback.expected}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Actual
+                        </dt>
+                        <dd>{feedback.actual}</dd>
+                      </div>
+                    </dl>
+                    <p className="text-xs text-muted-foreground">
+                      Build {feedback.build} · {feedback.category} ·{" "}
+                      {feedback.page} · {feedback.device}
+                    </p>
+                    <div className="max-w-sm">
+                      <ContactSnapshot
+                        build={feedback.build}
+                        annotation={feedback.annotation}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </QASection>
+        )}
       </div>
     </div>
   );

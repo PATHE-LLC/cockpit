@@ -10,20 +10,20 @@ export const SCOPES: {
 }[] = [
   {
     id: "changed",
-    title: "Changed + critical",
-    description: "Contact form changes and a checkout smoke test.",
+    title: "Quick check",
+    description: "Contact form and checkout.",
     estimate: "~2 min",
   },
   {
     id: "risk",
     title: "Broader coverage",
-    description: "Add validation, accessibility and mobile layout.",
+    description: "Adds validation, keyboard access and mobile layout.",
     estimate: "~4 min",
   },
   {
     id: "release",
-    title: "Release pass",
-    description: "All 11 checks agreed for this demo release.",
+    title: "Full release check",
+    description: "All 11 checks, including cart and product pages.",
     estimate: "~6 min",
   },
 ];
@@ -43,7 +43,7 @@ export interface Check {
 export const CHECKS: Check[] = [
   {
     id: "C01",
-    title: "Send a message",
+    title: "Submit contact form",
     area: "Contact",
     runner: "Playwright",
     scope: "changed",
@@ -54,7 +54,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C02",
-    title: "Keep message after a failure",
+    title: "Keep message if sending fails",
     area: "Contact",
     runner: "AI browser",
     scope: "changed",
@@ -67,7 +67,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C03",
-    title: "Confirm inbox delivery",
+    title: "Deliver message to inbox",
     area: "Contact",
     runner: "AI browser",
     scope: "changed",
@@ -78,7 +78,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C04",
-    title: "Confirmation response time",
+    title: "Confirmation within 2 seconds",
     area: "Contact",
     runner: "AI browser",
     scope: "changed",
@@ -89,7 +89,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C05",
-    title: "Checkout smoke test",
+    title: "Reach checkout",
     area: "Checkout",
     runner: "Playwright",
     scope: "changed",
@@ -112,7 +112,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C07",
-    title: "Contact form on mobile",
+    title: "Use contact form on mobile",
     area: "Contact",
     runner: "AI browser",
     scope: "risk",
@@ -124,7 +124,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C08",
-    title: "Labels and keyboard access",
+    title: "Complete form using keyboard",
     area: "Contact",
     runner: "Playwright",
     scope: "risk",
@@ -149,7 +149,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C10",
-    title: "Empty cart recovery",
+    title: "Return to shop from an empty cart",
     area: "Cart",
     runner: "Playwright",
     scope: "release",
@@ -160,7 +160,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "C11",
-    title: "Product browsing",
+    title: "Read product details on mobile",
     area: "Catalog",
     runner: "AI browser",
     scope: "release",

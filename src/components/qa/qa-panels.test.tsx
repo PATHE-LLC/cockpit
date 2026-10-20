@@ -8,7 +8,7 @@ import { ReleaseReview, Results, RunPlan } from "./qa-panels";
 const openAttempts = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(
     screen.getByRole("button", {
-      name: "View evidence for Confirmation response time",
+      name: "View evidence for Confirmation within 2 seconds",
     }),
   );
 };
@@ -34,7 +34,7 @@ describe("reviewing flaky QA evidence", () => {
       "true",
     );
     expect(useQA.getState().flakyReviewed).toBe(false);
-    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.click(screen.getByRole("button", { name: "All results" }));
     await user.click(screen.getByRole("combobox", { name: "Run history" }));
     await user.click(
       await screen.findByRole("option", { name: "Run 2 · build 13" }),
@@ -80,7 +80,7 @@ describe("reviewing flaky QA evidence", () => {
     expect(useQA.getState().tab).toBe("results");
     view.rerender(<Results running={false} onRun={vi.fn()} />);
     expect(
-      screen.getByRole("dialog", { name: "Confirmation response time" }),
+      screen.getByRole("region", { name: "Check evidence" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("checkbox", { name: /I reviewed both attempts/ }),
@@ -96,11 +96,16 @@ describe("choosing a QA run", () => {
     const run = vi.fn();
     render(<RunPlan running={false} onRun={run} />);
     await user.click(
-      screen.getByRole("checkbox", { name: "Keep message after a failure" }),
+      screen.getByRole("checkbox", { name: "Keep message if sending fails" }),
     );
     expect(screen.getByText("4 checks selected")).toBeInTheDocument();
     expect(screen.getByText("$0.28 est.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Release pass" }));
+    await user.click(screen.getByRole("combobox", { name: "Test coverage" }));
+    await user.click(
+      await screen.findByRole("option", {
+        name: "Full release check · 11 checks",
+      }),
+    );
     expect(screen.getByText("11 checks selected")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Run 11 checks" }));
     expect(run).toHaveBeenCalledOnce();

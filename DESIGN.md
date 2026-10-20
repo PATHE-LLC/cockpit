@@ -123,11 +123,10 @@ components:
     textColor: "{colors.foreground}"
     rounded: "{rounded.2xl}"
     padding: "1.5rem"
-  qa-check-table:
-    backgroundColor: "{colors.background}"
+  qa-checklist:
+    backgroundColor: "transparent"
     textColor: "{colors.foreground}"
     typography: "{typography.body}"
-    rounded: "{rounded.xl}"
 ---
 
 # Design System: Cockpit
@@ -138,20 +137,20 @@ components:
 
 Cockpit uses its existing neutral base-maia shadcn preset, local Geist fonts and lime primary accent. Familiar controls, clear hierarchy and modest density give the work priority. This records the shipped system; it does not establish a separate QA identity.
 
-The QA workspace applies that system to selecting checks, inspecting estimates and starting runs. Its composition is scoped to QA. Bencho's restraint, layout and interaction quality are the confirmed reference; the optional assistant supports the workspace.
+The QA workspace applies that system to selecting checks, inspecting estimates and starting runs. Its composition is scoped to QA. Bencho's restraint, layout and interaction quality are the confirmed reference; flatter grouping and fewer repeated labels keep the next action clear.
 
 **Key Characteristics:**
 - Semantic neutral surfaces in light and dark themes.
 - Compact Geist hierarchy and pill-shaped controls.
 - Borders, rings and tonal grouping at rest; elevation for overlays.
-- Progressive detail beside a clear primary task.
+- Progressive detail and clear next actions.
 
 ## Colors
 
 The palette pairs near-neutral surfaces with a bright lime action accent. Frontmatter preserves the source OKLCH values; `-dark` entries record the corresponding `.dark` overrides.
 
 ### Primary
-- **Cockpit Lime:** primary actions, checked boxes and passed-status badges. Use its paired dark green foreground for text and icons on the fill.
+- **Cockpit Lime:** primary actions and checked boxes. Use its paired dark green foreground for text and icons on the fill.
 
 ### Neutral
 - **White / Near Black:** background and foreground reverse between themes; cards and popovers use their semantic surface roles.
@@ -167,7 +166,7 @@ Destructive red identifies failure and invalid state. Failed badges use the sour
 **Body and Heading Font:** locally hosted Geist, with Arial and sans-serif fallbacks. **Mono Font:** locally hosted Geist Mono for code and logs. There is no separate display face in the sampled system.
 
 - **Headline:** compact page headings using the frontmatter headline role.
-- **Title:** card and sheet headings; QA's assistant empty state uses a larger medium-weight title (18px).
+- **Title:** card and overlay headings. QA section headings use a medium-weight step (18px).
 - **Body:** standard interface copy; explanatory paragraphs increase line-height to 24px.
 - **Control:** medium-weight button, tab and section labels.
 - **Metadata:** build context, methods, devices and supporting details. Badges use the same small size with medium weight.
@@ -178,11 +177,11 @@ Use tabular numerals for check counts, duration and money. Inputs retain the pre
 
 The shared `page-column` utility provides a centered prose column (42rem maximum, 24px horizontal padding). It is not the QA workspace's container.
 
-QA uses a centered work column (64rem maximum), 20px horizontal and 28px vertical padding, increasing to 32px and 36px from 640px. Repeated content gaps are 16–32px; table cells use 12px padding. Headers and action groups wrap rather than compress labels.
+QA uses a centered work column (48rem maximum, 24px horizontal padding). Its quiet task-style header has 32px top padding, increasing to 48px from 640px. Content groups generally use 24px gaps; checklist rows use 12px vertical padding. Headers and action groups wrap rather than compress labels.
 
-In QA, scroll the work region independently of the bottom action footer. Keep selection count, duration, cost and Run together there. Coverage uses the existing segmented toggle from 640px and a select below it. Method and device columns appear at 768px and 1024px; check names remain readable and details remain available in a sheet.
+In QA, scroll the work region independently of the bottom action footer. Keep selection count, duration, cost and Run together there. Coverage uses the existing Select at every width, with plain-language presets and an explicit custom-selection state. Checklist rows show a checkbox, readable label and separate detail action.
 
-The optional QA assistant becomes a resizable side panel from 1024px (initially 32%, minimum 320px); below that it uses a sheet. Detail sheets fill narrow screens and cap at 36rem from 640px. These are QA patterns, not a required layout for every Cockpit surface.
+QA has three destinations: Checks, Results and Release. Evidence and issue fixes stay in the main Results view with a back action. Short check, environment, release-hold and feedback interactions use the existing centered Dialog, also used by New task. QA has no chat or sheet/sidebar detail layout. These are QA patterns, not a required layout for every Cockpit surface.
 
 ## Elevation & Depth
 
@@ -194,7 +193,7 @@ State transitions are short: controls use the preset's 150ms timing, sheets 200m
 
 ## Shapes
 
-The source radius base is 10px. Buttons, inputs, badges and tab tracks use the broad control radius; cards use the container radius and QA tables use the smaller container radius. Checkboxes are compact rounded squares (6px corners, 16px size). Use the recorded scale rather than introducing QA-specific control silhouettes.
+The source radius base is 10px. Buttons, inputs, badges and tab tracks use the broad control radius; cards use the container radius. QA checklist rows stay flat, separated by fine rules. Checkboxes are compact rounded squares (6px corners, 16px size). Use the recorded scale rather than introducing QA-specific control silhouettes.
 
 ## Components
 
@@ -205,13 +204,16 @@ Calm, compact, medium-weight controls. Primary uses the lime pair; outline uses 
 Use the supplied pill-shaped input and select, translucent input fill and one-pixel stroke. Focus follows the button ring; invalid state uses destructive border and ring. Keep labels available to assistive technology. Do not replace semantic controls with visually simulated controls.
 
 ### Navigation
-The default Tabs form a muted pill track with an active background-colored tab. In dark mode the active tab uses the input surface and border. The library's line variant remains available for contexts that need it. Preserve keyboard tab behavior and visible focus.
+The default Tabs form a muted pill track with an active background-colored tab. In dark mode the active tab uses the input surface and border. QA labels its three tabs Checks, Results and Release. The library's line variant remains available for contexts that need it. Preserve keyboard tab behavior and visible focus.
 
 ### Chips
-Badges are compact pills (20px high). QA uses primary for passed, destructive for failed, secondary for blocked/flaky/stale/untested and outline for context. Pair status text with an inline Lucide icon; color alone does not distinguish outcomes.
+Badges are compact pills (20px high). QA uses neutral secondary badges for passed, blocked, flaky, stale and untested outcomes, and destructive for failed. Context labels use secondary or outline. Pair outcome text with an inline Lucide icon; color alone does not distinguish outcomes.
 
 ### Cards / Containers
-The shared Card has 24px internal spacing, reduced to 16px for its small size, and a subtle ring instead of a cast shadow. QA's checklist is a bordered table rather than a stack of cards: muted area rows, wrap-capable labels, semantic checkboxes and separate detail buttons.
+The shared Card has 24px internal spacing, reduced to 16px for its small size, and a subtle ring instead of a cast shadow. QA's checklist uses simple divided rows with wrap-capable labels, semantic checkboxes and separate detail buttons; no enclosing card or colored group rows.
+
+### Dialogs / Feedback
+QA reuses the centered New task Dialog primitive: popover surface, broad control radius, 24px padding and a subtle ring. Short detail content scrolls within the viewport when needed. Open store is a native link to a standalone store route in a new tab; browser-local history stays synchronized across tabs. Runs show local completion progress, and consequential actions confirm through the standard Sonner toast system.
 
 **The Preset Control Rule.** Reuse the existing shadcn variants, states and semantics; compose workflow structure around them.
 
@@ -221,9 +223,8 @@ The shared Card has 24px internal spacing, reduced to 16px for its small size, a
 - **Do** use semantic surface/foreground pairs in both themes.
 - **Do** preserve the preset's control radii, focus rings and disabled states.
 - **Do** use tabular numerals for estimates and counts.
-- **Do** keep QA's selection, estimate and Run in one workspace, with optional detail and assistant panels.
+- **Do** keep QA's selection, estimate and Run together, and its evidence and issue fixes in the main Results view.
 
 ### Don't:
 - **Don't** override shared controls to create a separate QA visual system.
-- **Don't** make QA depend on a detached composer or a chat-first entry flow.
 - **Don't** communicate QA outcomes through color alone.
