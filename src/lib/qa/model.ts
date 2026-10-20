@@ -182,6 +182,25 @@ export const estimatedCost = (ids: string[]) =>
   ids.filter((id) => CHECKS.find((c) => c.id === id)?.runner === "AI browser")
     .length * 0.14;
 
+// Illustrative planning times; customized selections must update the estimate too.
+const CHECK_SECONDS: Record<string, number> = {
+  C01: 10,
+  C02: 30,
+  C03: 25,
+  C04: 40,
+  C05: 15,
+  C06: 20,
+  C07: 50,
+  C08: 50,
+  C09: 35,
+  C10: 35,
+  C11: 50,
+};
+export const estimatedMinutes = (ids: string[]) =>
+  Math.ceil(
+    ids.reduce((seconds, id) => seconds + (CHECK_SECONDS[id] ?? 0), 0) / 60,
+  );
+
 export interface Attempt {
   outcome: "passed" | "failed";
   duration: string;

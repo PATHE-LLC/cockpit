@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Installed agent skills and local design-review tooling are not app source.
+    ".agents/**",
+    ".impeccable/**",
     // Vendored component-registry code (shadcn/ui, AI Elements, assistant-ui).
     "src/components/ui/**",
     "src/components/ai-elements/**",

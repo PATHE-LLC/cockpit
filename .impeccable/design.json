@@ -1,0 +1,553 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T10:12:22.081419+00:00",
+  "title": "Design System: Cockpit",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Near Black",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "White Card",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Cockpit Lime",
+        "tonalRamp": [
+          "oklch(0.15 0.238 128.85)",
+          "oklch(0.25 0.238 128.85)",
+          "oklch(0.35 0.238 128.85)",
+          "oklch(0.45 0.238 128.85)",
+          "oklch(0.60 0.238 128.85)",
+          "oklch(0.75 0.238 128.85)",
+          "oklch(0.85 0.238 128.85)",
+          "oklch(0.95 0.238 128.85)"
+        ]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Deep Green",
+        "tonalRamp": [
+          "oklch(0.15 0.101 131.063)",
+          "oklch(0.25 0.101 131.063)",
+          "oklch(0.35 0.101 131.063)",
+          "oklch(0.45 0.101 131.063)",
+          "oklch(0.60 0.101 131.063)",
+          "oklch(0.75 0.101 131.063)",
+          "oklch(0.85 0.101 131.063)",
+          "oklch(0.95 0.101 131.063)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Soft Cool Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0.001 286.375)",
+          "oklch(0.25 0.001 286.375)",
+          "oklch(0.35 0.001 286.375)",
+          "oklch(0.45 0.001 286.375)",
+          "oklch(0.60 0.001 286.375)",
+          "oklch(0.75 0.001 286.375)",
+          "oklch(0.85 0.001 286.375)",
+          "oklch(0.95 0.001 286.375)"
+        ]
+      },
+      "secondary-foreground": {
+        "role": "neutral",
+        "displayName": "Deep Cool Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0.006 285.885)",
+          "oklch(0.25 0.006 285.885)",
+          "oklch(0.35 0.006 285.885)",
+          "oklch(0.45 0.006 285.885)",
+          "oklch(0.60 0.006 285.885)",
+          "oklch(0.75 0.006 285.885)",
+          "oklch(0.85 0.006 285.885)",
+          "oklch(0.95 0.006 285.885)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Soft Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Supporting Gray",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Fine Neutral Stroke",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input Stroke",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Focus Gray",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "destructive": {
+        "role": "destructive",
+        "displayName": "Failure Red",
+        "tonalRamp": [
+          "oklch(0.15 0.245 27.325)",
+          "oklch(0.25 0.245 27.325)",
+          "oklch(0.35 0.245 27.325)",
+          "oklch(0.45 0.245 27.325)",
+          "oklch(0.60 0.245 27.325)",
+          "oklch(0.75 0.245 27.325)",
+          "oklch(0.85 0.245 27.325)",
+          "oklch(0.95 0.245 27.325)"
+        ]
+      },
+      "background-dark": {
+        "role": "neutral",
+        "displayName": "Near Black Canvas",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "foreground-dark": {
+        "role": "neutral",
+        "displayName": "Light Foreground",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "card-dark": {
+        "role": "neutral",
+        "displayName": "Raised Dark Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Cockpit Lime — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.233 130.85)",
+          "oklch(0.25 0.233 130.85)",
+          "oklch(0.35 0.233 130.85)",
+          "oklch(0.45 0.233 130.85)",
+          "oklch(0.60 0.233 130.85)",
+          "oklch(0.75 0.233 130.85)",
+          "oklch(0.85 0.233 130.85)",
+          "oklch(0.95 0.233 130.85)"
+        ]
+      },
+      "secondary-dark": {
+        "role": "neutral",
+        "displayName": "Cool Dark Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0.006 286.033)",
+          "oklch(0.25 0.006 286.033)",
+          "oklch(0.35 0.006 286.033)",
+          "oklch(0.45 0.006 286.033)",
+          "oklch(0.60 0.006 286.033)",
+          "oklch(0.75 0.006 286.033)",
+          "oklch(0.85 0.006 286.033)",
+          "oklch(0.95 0.006 286.033)"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Muted Dark Neutral",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "muted-foreground-dark": {
+        "role": "neutral",
+        "displayName": "Supporting Gray — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "Translucent Light Border",
+        "tonalRamp": [
+          "oklch(0.15 0 0 / 10%)",
+          "oklch(0.25 0 0 / 10%)",
+          "oklch(0.35 0 0 / 10%)",
+          "oklch(0.45 0 0 / 10%)",
+          "oklch(0.60 0 0 / 10%)",
+          "oklch(0.75 0 0 / 10%)",
+          "oklch(0.85 0 0 / 10%)",
+          "oklch(0.95 0 0 / 10%)"
+        ]
+      },
+      "input-dark": {
+        "role": "neutral",
+        "displayName": "Translucent Light Input",
+        "tonalRamp": [
+          "oklch(0.15 0 0 / 15%)",
+          "oklch(0.25 0 0 / 15%)",
+          "oklch(0.35 0 0 / 15%)",
+          "oklch(0.45 0 0 / 15%)",
+          "oklch(0.60 0 0 / 15%)",
+          "oklch(0.75 0 0 / 15%)",
+          "oklch(0.85 0 0 / 15%)",
+          "oklch(0.95 0 0 / 15%)"
+        ]
+      },
+      "ring-dark": {
+        "role": "neutral",
+        "displayName": "Focus Gray — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "destructive-dark": {
+        "role": "destructive",
+        "displayName": "Failure Red — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.191 22.216)",
+          "oklch(0.25 0.191 22.216)",
+          "oklch(0.35 0.191 22.216)",
+          "oklch(0.45 0.191 22.216)",
+          "oklch(0.60 0.191 22.216)",
+          "oklch(0.75 0.191 22.216)",
+          "oklch(0.85 0.191 22.216)",
+          "oklch(0.95 0.191 22.216)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Compact QA page headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and sheet headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Standard interface copy."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Buttons, tabs and medium-weight labels."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Build context, methods, devices and supporting detail."
+      },
+      "mono": {
+        "displayName": "Geist Mono",
+        "purpose": "Code and logs."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ring",
+        "value": "0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent)",
+        "purpose": "Shared Card surface boundary."
+      },
+      {
+        "name": "sheet-shadow",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Existing Sheet overlay elevation."
+      },
+      {
+        "name": "floating-shadow",
+        "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+        "purpose": "Existing Select and Popover overlay elevation."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent)",
+        "purpose": "Visible keyboard focus on shared controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Base-maia control state changes."
+      },
+      {
+        "name": "sheet-transition",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Sheet opacity and 2.5rem entrance/exit translation."
+      },
+      {
+        "name": "floating-transition",
+        "value": "100ms",
+        "purpose": "Dialog, select and popover entrance/exit."
+      },
+      {
+        "name": "ease-out-strong",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Existing press and stagger utilities; not a new QA animation."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Existing overlays remove animation; sheets and active buttons remove translation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Existing base-maia primary variant; default size.",
+      "html": "<button type=\"button\" class=\"ds-button-primary\">Run checks</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;cursor:pointer;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;background:var(--primary);color:var(--primary-foreground);}.ds-button-primary:hover{background:color-mix(in oklch,var(--primary) 80%,transparent);}.ds-button-primary:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-button-primary:active{translate:0 1px;}.ds-button-primary:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-primary:active{translate:none;}}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Existing base-maia outline variant; default size.",
+      "html": "<button type=\"button\" class=\"ds-button-outline\">Run environment</button>",
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;cursor:pointer;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;background:color-mix(in oklch,var(--input) 30%,transparent);color:var(--foreground);border-color:var(--border);}.ds-button-outline:hover{background:color-mix(in oklch,var(--input) 50%,transparent);color:var(--foreground);}.ds-button-outline:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-button-outline:active{translate:0 1px;}.ds-button-outline:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-outline:active{translate:none;}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Existing base-maia secondary variant; default size.",
+      "html": "<button type=\"button\" class=\"ds-button-secondary\">Ask Cockpit</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;cursor:pointer;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;background:var(--secondary);color:var(--secondary-foreground);}.ds-button-secondary:hover{background:color-mix(in oklch,var(--secondary),var(--foreground) 5%);}.ds-button-secondary:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-button-secondary:active{translate:0 1px;}.ds-button-secondary:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-secondary:active{translate:none;}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Existing base-maia ghost variant; default size.",
+      "html": "<button type=\"button\" class=\"ds-button-ghost\">Show more checks</button>",
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 12px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;cursor:pointer;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;background:transparent;color:var(--foreground);}.ds-button-ghost:hover{background:var(--muted);color:var(--foreground);}.ds-button-ghost:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-button-ghost:active{translate:0 1px;}.ds-button-ghost:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-button-ghost:active{translate:none;}}:host-context(.dark) .ds-button-ghost:hover{background:color-mix(in oklch,var(--muted) 50%,transparent);}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The shared field, with larger text below the medium breakpoint.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-name\">Name</label><input class=\"ds-field\" id=\"ds-name\" type=\"text\" placeholder=\"Your name\">",
+      "css": ".ds-field-label{display:block;margin-bottom:8px;color:var(--foreground);font-size:14px;font-weight:500;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-field{height:36px;width:100%;min-width:0;padding:4px 12px;border:1px solid var(--input);border-radius:var(--radius-4xl,1.625rem);background:color-mix(in oklch,var(--input) 30%,transparent);color:var(--foreground);font-size:16px;line-height:24px;transition:color 150ms,border-color 150ms,box-shadow 150ms;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-field::placeholder{color:var(--muted-foreground);}.ds-field:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-field:disabled{pointer-events:none;cursor:not-allowed;opacity:.5;}.ds-field[aria-invalid=true]{border-color:var(--destructive);box-shadow:0 0 0 3px color-mix(in oklch,var(--destructive) 20%,transparent);}@media(min-width:768px){.ds-field{font-size:14px;line-height:20px;}}"
+    },
+    {
+      "name": "Workspace Tabs",
+      "kind": "nav",
+      "refersTo": "tabs",
+      "description": "The shared default Tabs, shown with QA labels.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"QA workspace\"><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">Test plan</button><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Runs</button><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Issues</button><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Release</button></div>",
+      "css": ".ds-tabs{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:3px;border-radius:var(--radius-4xl,1.625rem);background:var(--muted);color:var(--muted-foreground);}.ds-tab{display:inline-flex;align-items:center;justify-content:center;height:calc(100% - 1px);padding:4px 8px;border:1px solid transparent;border-radius:var(--radius-xl,.875rem);background:transparent;color:color-mix(in oklch,var(--foreground) 60%,transparent);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-tab:hover{color:var(--foreground);}.ds-tab[aria-selected=true]{background:var(--background);color:var(--foreground);}.ds-tab:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-tab:disabled{pointer-events:none;opacity:.5;}:host-context(.dark) .ds-tab{color:var(--muted-foreground);}:host-context(.dark) .ds-tab[aria-selected=true]{border-color:var(--input);background:color-mix(in oklch,var(--input) 30%,transparent);color:var(--foreground);}"
+    },
+    {
+      "name": "Secondary Badge",
+      "kind": "chip",
+      "refersTo": "badge-secondary",
+      "description": "Compact context and neutral QA outcome label.",
+      "html": "<span class=\"ds-badge\">Blocked</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:20px;padding:2px 8px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);background:var(--secondary);color:var(--secondary-foreground);font-size:12px;font-weight:500;line-height:16px;white-space:nowrap;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-badge:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}"
+    },
+    {
+      "name": "Shared Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default Card with source spacing and subtle foreground ring.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Review details</div><div class=\"ds-card-description\">Context for the current work.</div></div><div class=\"ds-card-content\">Evidence and supporting information.</div></div>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:24px;overflow:hidden;padding:24px 0;border-radius:var(--radius-2xl,1.125rem);background:var(--card);color:var(--card-foreground);font-size:14px;line-height:20px;box-shadow:0 0 0 1px color-mix(in oklch,var(--foreground) 10%,transparent);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-card-header{display:grid;gap:8px;padding:0 24px;}.ds-card-title{font-size:16px;font-weight:500;line-height:24px;}.ds-card-description{color:var(--muted-foreground);}.ds-card-content{padding:0 24px;}"
+    },
+    {
+      "name": "Checkbox",
+      "kind": "input",
+      "description": "The shared compact checked state, translated to a working HTML checkbox for this preview.",
+      "html": "<span class=\"ds-checkbox-wrap\"><input class=\"ds-checkbox\" type=\"checkbox\" checked aria-label=\"Keep message after a failure\"><svg class=\"ds-checkbox-mark\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m20 6-11 11-5-5\"/></svg></span>",
+      "css": ".ds-checkbox-wrap{position:relative;display:inline-flex;width:16px;height:16px;flex-shrink:0;}.ds-checkbox{appearance:none;width:16px;height:16px;margin:0;border:1px solid var(--input);border-radius:6px;background:transparent;cursor:pointer;transition:box-shadow 150ms;}.ds-checkbox:checked{border-color:var(--primary);background:var(--primary);}.ds-checkbox:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-checkbox:disabled{cursor:not-allowed;opacity:.5;}.ds-checkbox-mark{position:absolute;inset:1px;width:14px;height:14px;color:var(--primary-foreground);pointer-events:none;opacity:0;}.ds-checkbox:checked+.ds-checkbox-mark{opacity:1;}:host-context(.dark) .ds-checkbox:not(:checked){background:color-mix(in oklch,var(--input) 30%,transparent);}"
+    },
+    {
+      "name": "QA Check Table",
+      "kind": "custom",
+      "refersTo": "qa-check-table",
+      "description": "QA-only grouping with a readable check label and separate evidence action.",
+      "html": "<div class=\"ds-check-table\"><div class=\"ds-check-group\">Contact</div><div class=\"ds-check-row\"><span class=\"ds-checkbox-wrap\"><input class=\"ds-checkbox\" type=\"checkbox\" checked aria-label=\"Keep message after a failure\"><svg class=\"ds-checkbox-mark\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m20 6-11 11-5-5\"/></svg></span><span class=\"ds-check-label\">Keep message after a failure</span><button type=\"button\" class=\"ds-detail\" aria-label=\"View check details\"><svg class=\"ds-detail-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button></div></div>",
+      "css": ".ds-checkbox-wrap{position:relative;display:inline-flex;width:16px;height:16px;flex-shrink:0;}.ds-checkbox{appearance:none;width:16px;height:16px;margin:0;border:1px solid var(--input);border-radius:6px;background:transparent;cursor:pointer;transition:box-shadow 150ms;}.ds-checkbox:checked{border-color:var(--primary);background:var(--primary);}.ds-checkbox:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-checkbox:disabled{cursor:not-allowed;opacity:.5;}.ds-checkbox-mark{position:absolute;inset:1px;width:14px;height:14px;color:var(--primary-foreground);pointer-events:none;opacity:0;}.ds-checkbox:checked+.ds-checkbox-mark{opacity:1;}:host-context(.dark) .ds-checkbox:not(:checked){background:color-mix(in oklch,var(--input) 30%,transparent);}.ds-check-table{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-xl,.875rem);background:var(--background);color:var(--foreground);font-size:14px;line-height:20px;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-check-group{padding:8px 12px;border-bottom:1px solid var(--border);background:color-mix(in oklch,var(--muted) 40%,transparent);color:var(--muted-foreground);font-size:12px;font-weight:500;line-height:16px;}.ds-check-row{display:flex;align-items:center;gap:24px;padding:12px;transition:background 150ms;}.ds-check-row:hover{background:color-mix(in oklch,var(--muted) 50%,transparent);}.ds-check-label{flex:1;}.ds-detail{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;padding:0;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);background:transparent;color:var(--foreground);transition:all 150ms;}.ds-detail-icon{width:16px;height:16px;}.ds-detail:hover{background:var(--muted);}.ds-detail:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-detail:active{translate:0 1px;}@media(prefers-reduced-motion:reduce){.ds-detail:active{translate:none;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Restraint, layout and interaction quality",
+    "overview": "Cockpit uses its existing neutral base-maia shadcn preset, local Geist fonts and lime primary accent. Familiar controls, clear hierarchy and modest density give the work priority. This records the shipped system; it does not establish a separate QA identity.\n\nThe QA workspace applies that system to selecting checks, inspecting estimates and starting runs. Its composition is scoped to QA. Bencho's restraint, layout and interaction quality are the confirmed reference; the optional assistant supports the workspace.",
+    "keyCharacteristics": [
+      "Semantic neutral surfaces in light and dark themes.",
+      "Compact Geist hierarchy and pill-shaped controls.",
+      "Borders, rings and tonal grouping at rest; elevation for overlays.",
+      "Progressive detail beside a clear primary task."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Pair Rule",
+        "body": "Use each surface with its paired foreground and let the existing theme variables switch together.",
+        "section": "colors"
+      },
+      {
+        "name": "The Overlay Depth Rule",
+        "body": "Preserve quiet work surfaces and use the existing floating-component treatments when content overlays the workspace.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Preset Control Rule",
+        "body": "Reuse the existing shadcn variants, states and semantics; compose workflow structure around them.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use semantic surface/foreground pairs in both themes.",
+      "Do preserve the preset's control radii, focus rings and disabled states.",
+      "Do use tabular numerals for estimates and counts.",
+      "Do keep QA's selection, estimate and Run in one workspace, with optional detail and assistant panels."
+    ],
+    "donts": [
+      "Don't override shared controls to create a separate QA visual system.",
+      "Don't make QA depend on a detached composer or a chat-first entry flow.",
+      "Don't communicate QA outcomes through color alone."
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   CHECKS,
+  estimatedMinutes,
   idsForScope,
   latestResults,
   releaseBlockers,
@@ -9,6 +10,13 @@ import {
 import { useQA } from "./store";
 
 describe("QA evidence and release rules", () => {
+  it("estimates the selected checks rather than retaining the preset duration", () => {
+    expect(estimatedMinutes(idsForScope("changed"))).toBe(2);
+    expect(estimatedMinutes(idsForScope("risk"))).toBe(4);
+    expect(estimatedMinutes(idsForScope("release"))).toBe(6);
+    expect(estimatedMinutes(["C01"])).toBe(1);
+    expect(estimatedMinutes([])).toBe(0);
+  });
   beforeEach(() => {
     useQA.setState({
       build: 12,

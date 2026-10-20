@@ -15,6 +15,7 @@
 
 # local working documents
 /docs/
+/.impeccable/review/
 
 # next.js
 /.next/

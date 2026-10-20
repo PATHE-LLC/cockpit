@@ -8,6 +8,15 @@ import {
   ShoppingBagIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -96,7 +105,7 @@ export function ContactPreview({
   const [submitted, setSubmitted] = useState(false);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="qa-surface max-h-[90dvh] overflow-y-auto overscroll-contain rounded-2xl sm:max-w-3xl">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto overscroll-contain rounded-2xl sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {reporting ? "Report an issue" : "Storefront preview"}
@@ -137,10 +146,9 @@ export function ContactPreview({
               <div>
                 <ContactSnapshot build={build} annotation={annotation} />
                 <label className="mt-3 flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={annotation}
-                    onChange={(e) => setAnnotation(e.target.checked)}
+                    onCheckedChange={setAnnotation}
                   />
                   Circle the message field
                 </label>
@@ -158,24 +166,42 @@ export function ContactPreview({
                   </pre>
                 </details>
               </div>
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 <div>
                   <Label htmlFor="feedback-category">Category</Label>
-                  <select
-                    id="feedback-category"
-                    className="mt-2 h-9 w-full rounded-md border bg-background px-3 text-sm"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    {[
+                  <Select
+                    items={[
                       "Bug",
                       "Visual polish",
                       "Usability",
                       "Feature request",
-                    ].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
+                    ].map((category) => ({ label: category, value: category }))}
+                    value={category}
+                    onValueChange={(value) => {
+                      if (value) setCategory(value);
+                    }}
+                  >
+                    <SelectTrigger
+                      id="feedback-category"
+                      className="mt-2 w-full"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {[
+                          "Bug",
+                          "Visual polish",
+                          "Usability",
+                          "Feature request",
+                        ].map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="feedback-description">What happened?</Label>
@@ -253,7 +279,7 @@ export function ContactPreview({
                 An order question or just saying hello? We’re here.
               </p>
               <form
-                className="space-y-4"
+                className="flex flex-col gap-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setFailed(true);

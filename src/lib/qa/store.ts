@@ -24,6 +24,7 @@ interface QAState {
   feedback: Feedback[];
   activeRun: number | null;
   activeCheck: string;
+  evidenceOpen: boolean;
   flakyReviewed: boolean;
   gapsAccepted: boolean;
   signoffs: string[];
@@ -44,6 +45,8 @@ interface QAState {
   startFix: () => void;
   capture: (feedback: Omit<Feedback, "id">) => void;
   selectResult: (run: number, check: string) => void;
+  inspectResult: (run: number, check: string) => void;
+  setEvidenceOpen: (open: boolean) => void;
   reviewFlaky: (value: boolean) => void;
   acceptGaps: (value: boolean) => void;
   signoff: (name: string) => void;
@@ -64,12 +67,13 @@ export const useQA = create<QAState>()(
       feedback: [],
       activeRun: null,
       activeCheck: "C02",
+      evidenceOpen: false,
       flakyReviewed: false,
       gapsAccepted: false,
       signoffs: [],
       decision: null,
       messages: [],
-      setTab: (tab) => set({ tab }),
+      setTab: (tab) => set({ tab, evidenceOpen: false }),
       setScope: (scope) => set({ scope, selected: idsForScope(scope) }),
       toggleCheck: (id) =>
         set((s) => ({
@@ -114,6 +118,7 @@ export const useQA = create<QAState>()(
           activeRun: run.id,
           activeCheck: failure ? "C02" : run.results[0].checkId,
           tab: "results",
+          evidenceOpen: false,
           flakyReviewed: false,
           signoffs: [],
           decision: null,
@@ -161,6 +166,9 @@ export const useQA = create<QAState>()(
           decision: null,
         })),
       selectResult: (activeRun, activeCheck) => set({ activeRun, activeCheck }),
+      inspectResult: (activeRun, activeCheck) =>
+        set({ activeRun, activeCheck, tab: "results", evidenceOpen: true }),
+      setEvidenceOpen: (evidenceOpen) => set({ evidenceOpen }),
       reviewFlaky: (flakyReviewed) =>
         set({ flakyReviewed, signoffs: [], decision: null }),
       acceptGaps: (gapsAccepted) =>

@@ -39,6 +39,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-text: var(--destructive-text);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -90,6 +91,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-text: color-mix(in oklch, var(--destructive) 85%, var(--foreground));
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -264,6 +266,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"] {
+    animation: none;
+    transition-property: opacity;
+  }
+  [data-slot="sheet-content"],
+  [data-slot="button"]:active {
+    translate: none;
+  }
   .stagger-in > * {
     animation: fade-only 200ms ease both;
   }
