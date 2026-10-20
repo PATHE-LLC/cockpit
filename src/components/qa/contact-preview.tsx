@@ -96,7 +96,7 @@ export function ContactPreview({
   const [submitted, setSubmitted] = useState(false);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto overscroll-contain rounded-2xl sm:max-w-3xl">
+      <DialogContent className="qa-surface max-h-[90dvh] overflow-y-auto overscroll-contain rounded-2xl sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {reporting ? "Report an issue" : "Storefront preview"}

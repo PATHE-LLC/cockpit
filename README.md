@@ -17,7 +17,9 @@ Everything runs on local demo data. There is no backend, no database and no secr
 
 ### The tasks
 
-**Forme contact form QA** is the new end-to-end review task. Start from Home or the Build & QA rail icon. Run the initial plan to see a failed check, a setup blocker and a flaky retry. Open the storefront, submit the form, and report the message-retention bug. Prepare the fix in Issues & retest, apply build 13, configure the demo inbox, and run the release pass. Review both flaky attempts, acknowledge coverage limits, record reviewer sign-offs and approve or hold the demo release. Run/evidence history and decisions stay in browser-local storage. All execution, captured evidence, costs and reviewer identities are illustrative; there is no live runner or deployment.
+**Forme contact form QA** is a task-first review workspace. Start from Home or the Build & QA rail icon. Review the selected checks, expand a check for its steps and expected result, and inspect the build, duration, cost estimate and setup blockers beside the plan. The bottom “Ask Cockpit” bar opens an optional contextual conversation.
+
+Run the initial plan to see a failed check, a setup blocker and a flaky retry. Select a result to inspect its evidence and attempts. Open the storefront, submit the form, and report the message-retention bug. Prepare the fix in Issues, apply build 13, configure the demo inbox, and run the release pass. Review both flaky attempts in the latest run, acknowledge coverage limits, record reviewer sign-offs and approve or hold the demo release. Run/evidence history and decisions stay in browser-local storage. All execution, captured evidence, costs and reviewer identities are illustrative; there is no live runner or deployment.
 
 The living index is explicitly deferred from this prototype.
 
@@ -75,3 +77,5 @@ The app has no environment variables and needs no server-side services, so it de
 ## Design notes
 
 Motion follows [Emil Kowalski's design-engineering guidance](https://emilkowal.ski/skill): custom ease-out curves, press feedback on buttons, specific transition properties, short staggered list entrances, no animation on keyboard-driven actions, and `prefers-reduced-motion` respected. Accessibility and interface details follow the Vercel Web Interface Guidelines and the WCAG-focused skills listed on [ui-skills.com](https://www.ui-skills.com/skills): visible focus, labelled controls, semantic landmarks, a skip link, `aria-live` for async status, tabular numerals, and loading, empty and error states.
+
+The QA surface also applies [Jakub’s UI polish guidance](https://jakub.kr/skills) and [Interface Design](https://www.ui-skills.com/skills/dammyjay93/interface-design): a focused checklist, restrained semantic color, consistent controls and progressive disclosure of evidence. Geist and Geist Mono are bundled locally under their included SIL Open Font License so development and builds do not depend on Google Fonts access.
