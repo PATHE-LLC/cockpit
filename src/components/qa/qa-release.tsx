@@ -4,18 +4,18 @@ import { useState } from "react";
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
-  ChevronDownIcon,
   CircleDashedIcon,
   ShieldCheckIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -37,30 +37,30 @@ export function ReleaseReview() {
   const [hold, setHold] = useState(false);
   const blockers = releaseBlockers(s.runs, s.build, s.issues, s.flakyReviewed);
   const latest = latestResults(s.runs, s.build);
-  const untested = CHECKS.filter((check) => !latest.has(check.id));
   const ready = !blockers.length && s.gapsAccepted && s.signoffs.length === 3;
   const flaky = [...latest.values()].find(
     (item) => !item.stale && item.result.outcome === "flaky",
   );
-  const openIssue = s.issues.find((issue) => issue.status !== "resolved");
+  const issue = s.issues.find((item) => item.status !== "resolved");
   const needsRun = blockers.some((blocker) =>
     /release pass|stale|failed|blocked/.test(blocker),
   );
-  const prepare = () => {
-    s.setScope("release");
-    s.setTab("plan");
-  };
-  const next =
-    openIssue && openIssue.status !== "fixed"
+  const nextLabel =
+    issue && issue.status !== "fixed"
       ? "Fix the open issue"
       : needsRun
         ? "Choose release checks"
         : "Review flaky check";
   const nextAction = () => {
-    if (openIssue && openIssue.status !== "fixed") s.setTab("issues");
-    else if (needsRun) prepare();
-    else if (flaky) s.inspectResult(flaky.run.id, flaky.result.checkId);
+    if (issue && issue.status !== "fixed") s.setTab("issues");
+    else if (needsRun) {
+      s.setScope("release");
+      s.setTab("plan");
+    } else if (flaky) s.inspectResult(flaky.run.id, flaky.result.checkId);
   };
+  const currentCount = [...latest.values()].filter(
+    (item) => item.run.build === s.build,
+  ).length;
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <div className="mx-auto flex max-w-3xl flex-col gap-7 px-6 pb-12">
@@ -83,46 +83,131 @@ export function ReleaseReview() {
             <p className="text-sm leading-6">{s.decision.note}</p>
           )}
         </div>
-        {blockers.length > 0 ? (
-          <>
-            <QASection title="Before you can approve">
-              <ul className="flex flex-col gap-4">
-                {[
-                  {
-                    show: openIssue && openIssue.status !== "fixed",
-                    text: "Fix the contact form issue.",
-                  },
-                  {
-                    show: needsRun,
-                    text: `Run all 11 release checks on build ${s.build}.`,
-                  },
-                  {
-                    show: flaky && !s.flakyReviewed,
-                    text: "Review the check that passed on retry.",
-                  },
-                ]
-                  .filter((item) => item.show)
-                  .map((item) => (
-                    <li
-                      key={item.text}
-                      className="flex items-start gap-3 text-sm leading-6"
-                    >
-                      <CircleDashedIcon
-                        aria-hidden
-                        className="mt-1 size-4 shrink-0 text-muted-foreground"
-                      />
-                      {item.text}
+        <section
+          data-tour="qa-release-evidence"
+          className="flex flex-col gap-2 border-y py-2"
+        >
+          <Accordion>
+            <AccordionItem value="evidence">
+              <AccordionTrigger>
+                <span>Release evidence</span>
+                <span className="ml-auto text-xs font-normal text-muted-foreground">
+                  {currentCount} of 11 · Build {s.build}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <p className="mb-4 text-xs text-muted-foreground">
+                  Select a check to inspect its build, expected result and
+                  recorded attempts.
+                </p>
+                <ul className="flex flex-col divide-y">
+                  {CHECKS.map((check) => {
+                    const item = latest.get(check.id);
+                    return (
+                      <li key={check.id}>
+                        <button
+                          disabled={!item}
+                          onClick={() =>
+                            item && s.inspectResult(item.run.id, check.id)
+                          }
+                          className="flex w-full items-center justify-between gap-3 rounded-lg py-3 text-left text-sm outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default"
+                        >
+                          <span>{check.title}</span>
+                          <QAStatus
+                            status={
+                              !item
+                                ? "not-tested"
+                                : item.stale
+                                  ? "stale"
+                                  : item.result.outcome
+                            }
+                          />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="usage">
+              <AccordionTrigger>
+                <span>Usage across all runs</span>
+                <span className="ml-auto text-xs font-normal tabular-nums text-muted-foreground">
+                  {money(s.runs.reduce((n, run) => n + run.cost, 0))} ·{" "}
+                  {s.runs.length} runs
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="flex flex-col divide-y">
+                  {s.runs.map((run) => (
+                    <li key={run.id}>
+                      <button
+                        className="flex w-full items-center justify-between gap-3 rounded-lg py-3 text-left text-sm outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50"
+                        onClick={() => {
+                          s.selectResult(run.id, s.activeCheck);
+                          s.setTab("results");
+                        }}
+                      >
+                        <span>
+                          Run {run.id} · Build {run.build}
+                        </span>
+                        <span className="flex items-center gap-2 tabular-nums">
+                          {money(run.cost)}
+                          <ArrowRightIcon aria-hidden className="size-3.5" />
+                        </span>
+                      </button>
                     </li>
                   ))}
-              </ul>
-              <Button className="mt-2 w-fit" onClick={nextAction}>
-                {next}
-                <ArrowRightIcon aria-hidden />
-              </Button>
-            </QASection>
-          </>
+                </ul>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  {s.runs
+                    .reduce((n, run) => n + run.tokens, 0)
+                    .toLocaleString()}{" "}
+                  tokens. Includes failed attempts and retries. All usage is
+                  illustrative.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
+        {blockers.length > 0 ? (
+          <QASection title="Before you can approve">
+            <ul className="flex flex-col gap-4">
+              {[
+                {
+                  show: issue && issue.status !== "fixed",
+                  text: "Fix the contact form issue.",
+                },
+                {
+                  show: needsRun,
+                  text: `Run all 11 release checks on build ${s.build}.`,
+                },
+                {
+                  show: flaky && !s.flakyReviewed,
+                  text: "Review the check that passed on retry.",
+                },
+              ]
+                .filter((item) => item.show)
+                .map((item) => (
+                  <li
+                    key={item.text}
+                    className="flex items-start gap-3 text-sm leading-6"
+                  >
+                    <CircleDashedIcon
+                      aria-hidden
+                      className="mt-1 size-4 shrink-0 text-muted-foreground"
+                    />
+                    {item.text}
+                  </li>
+                ))}
+            </ul>
+            <Button className="mt-2 w-fit" onClick={nextAction}>
+              {nextLabel}
+              <ArrowRightIcon aria-hidden />
+            </Button>
+          </QASection>
         ) : (
-          <>
+          <div className="flex flex-col gap-7">
             <p className="flex items-center gap-2 text-sm">
               <CheckCircle2Icon aria-hidden className="size-4" />
               All 11 release checks reviewed on build {s.build}.
@@ -143,7 +228,10 @@ export function ReleaseReview() {
               </label>
             </QASection>
             <Separator />
-            <fieldset className="flex min-w-0 flex-col gap-4">
+            <fieldset
+              className="flex min-w-0 flex-col gap-4"
+              data-tour="qa-release-form"
+            >
               <legend className="mb-4 text-sm font-medium">
                 Reviewer sign-offs{" "}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
@@ -182,8 +270,22 @@ export function ReleaseReview() {
                 reviewers.
               </p>
             </fieldset>
-            <Separator />
-            <div className="flex flex-col gap-3">
+          </div>
+        )}
+        <section
+          className="flex flex-col gap-4 border-t pt-6"
+          data-tour="qa-decision"
+        >
+          <div className="flex flex-col gap-1">
+            <h3 className="text-sm font-medium">Release decision</h3>
+            <p className="text-xs leading-5 text-muted-foreground">
+              {blockers.length
+                ? "Approval is unavailable until the checks above are complete. You can hold the release with a reason."
+                : "Approve this build, or hold it and explain what needs to change."}
+            </p>
+          </div>
+          {!blockers.length && (
+            <div className="flex flex-col gap-2">
               <Label htmlFor="release-note">
                 Decision note{" "}
                 <span className="font-normal text-muted-foreground">
@@ -198,14 +300,16 @@ export function ReleaseReview() {
                 placeholder="Anything the release owner should know?"
               />
             </div>
-            <div className="flex flex-col items-start gap-3">
-              {!ready && (
-                <p className="text-xs text-muted-foreground">
-                  {!s.gapsAccepted
-                    ? "Accept the coverage limits to continue."
-                    : `${3 - s.signoffs.length} sign-off${s.signoffs.length === 2 ? "" : "s"} still needed.`}
-                </p>
-              )}
+          )}
+          {!blockers.length && !ready && (
+            <p className="text-xs text-muted-foreground">
+              {!s.gapsAccepted
+                ? "Accept the coverage limits to continue."
+                : `${3 - s.signoffs.length} sign-offs still needed.`}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {!blockers.length && (
               <Button
                 disabled={!ready || s.decision?.kind === "approved"}
                 onClick={() => {
@@ -221,53 +325,12 @@ export function ReleaseReview() {
                   ? "Approved"
                   : "Approve demo release"}
               </Button>
-            </div>
-          </>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setHold(true)}>
-            Hold release…
-          </Button>
-          <Collapsible>
-            <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
-              Evidence and usage
-              <ChevronDownIcon aria-hidden />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="flex flex-col gap-4 py-4 text-xs leading-5">
-                <p className="text-muted-foreground">
-                  {untested.length} not tested · {s.runs.length} runs ·{" "}
-                  {money(s.runs.reduce((n, run) => n + run.cost, 0))} recorded
-                  AI cost ·{" "}
-                  {s.runs
-                    .reduce((n, run) => n + run.tokens, 0)
-                    .toLocaleString()}{" "}
-                  tokens. Includes retries; usage is illustrative.
-                </p>
-                {CHECKS.map((check) => {
-                  const item = latest.get(check.id);
-                  return (
-                    <div
-                      key={check.id}
-                      className="flex items-center justify-between gap-3"
-                    >
-                      <span>{check.title}</span>
-                      <QAStatus
-                        status={
-                          !item
-                            ? "not-tested"
-                            : item.stale
-                              ? "stale"
-                              : item.result.outcome
-                        }
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+            )}
+            <Button variant="outline" onClick={() => setHold(true)}>
+              Hold release
+            </Button>
+          </div>
+        </section>
         <Dialog open={hold} onOpenChange={setHold}>
           <DialogContent>
             <DialogHeader>

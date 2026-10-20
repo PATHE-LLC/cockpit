@@ -6,37 +6,21 @@ import {
   CircleDashedIcon,
   ExternalLinkIcon,
   Loader2Icon,
-  MoreHorizontalIcon,
-  RotateCcwIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { buttonVariants } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHECKS, type QATab } from "@/lib/qa/model";
 import { useQA } from "@/lib/qa/store";
-import { Issues, ReleaseReview, Results, RunPlan } from "./qa-panels";
+import { isQATourActive } from "@/lib/qa/tour";
+import { cn } from "cn";
+import { ReleaseReview, Results, RunPlan } from "./qa-panels";
 
 export function QAWorkspace() {
   const s = useQA();
   const [ready, setReady] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
   const [progress, setProgress] = useState<{
     ids: string[];
     completed: number;
@@ -47,7 +31,8 @@ export function QAWorkspace() {
   useEffect(() => {
     Promise.resolve(useQA.persist.rehydrate()).then(() => setReady(true));
     const sync = (event: StorageEvent) => {
-      if (event.key === "cockpit-qa-v1") void useQA.persist.rehydrate();
+      if (event.key === "cockpit-qa-v1" && !isQATourActive())
+        void useQA.persist.rehydrate();
     };
     window.addEventListener("storage", sync);
     return () => {
@@ -85,9 +70,17 @@ export function QAWorkspace() {
     }, 420);
   };
   const activeTab = s.tab === "issues" ? "results" : s.tab;
+  const expanded =
+    activeTab === "results" && (s.evidenceOpen || s.tab === "issues");
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
-      <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pb-6 pt-8 sm:pt-12">
+      <div
+        data-tour="qa-overview"
+        className={cn(
+          "mx-auto w-full shrink-0 px-6 pb-6 pt-8 sm:pt-12 motion-safe:transition-[max-width] motion-safe:duration-200",
+          expanded ? "max-w-[1440px]" : "max-w-3xl",
+        )}
+      >
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-semibold tracking-tight">Forme QA</h1>
@@ -102,33 +95,12 @@ export function QAWorkspace() {
               rel="noopener noreferrer"
               className={buttonVariants({ variant: "ghost", size: "sm" })}
             >
-              <span className="hidden sm:inline">Open store</span>
+              <span className="hidden sm:inline">Open preview</span>
               <ExternalLinkIcon aria-hidden />
-              <span className="sr-only sm:hidden">Open store in a new tab</span>
+              <span className="sr-only sm:hidden">
+                Open preview in a new tab
+              </span>
             </a>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="QA options"
-                  />
-                }
-              >
-                <MoreHorizontalIcon aria-hidden />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    disabled={running}
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    <RotateCcwIcon aria-hidden /> Restart demo
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
       </div>
@@ -137,7 +109,12 @@ export function QAWorkspace() {
         onValueChange={(value) => s.setTab(value as QATab)}
         className="min-h-0 flex-1 gap-0"
       >
-        <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pb-6">
+        <div
+          className={cn(
+            "mx-auto w-full shrink-0 px-6 pb-6 motion-safe:transition-[max-width] motion-safe:duration-200",
+            expanded ? "max-w-[1440px]" : "max-w-3xl",
+          )}
+        >
           <TabsList aria-label="QA workspace">
             <TabsTrigger value="plan">Checks</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
@@ -167,8 +144,6 @@ export function QAWorkspace() {
             >
               {progress ? (
                 <RunProgress {...progress} />
-              ) : s.tab === "issues" ? (
-                <Issues />
               ) : (
                 <Results running={running} onRun={onRun} />
               )}
@@ -182,31 +157,6 @@ export function QAWorkspace() {
           </>
         )}
       </Tabs>
-      <Dialog open={confirmReset} onOpenChange={setConfirmReset}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Restart QA?</DialogTitle>
-            <DialogDescription>
-              Clear saved runs, feedback and release decisions, and return to
-              build 12.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmReset(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                s.reset();
-                setConfirmReset(false);
-                toast.success("QA restarted");
-              }}
-            >
-              Restart demo
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

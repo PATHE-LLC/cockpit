@@ -49,7 +49,17 @@ export function QAStatus({ status }: { status: EvidenceStatus }) {
           ? CircleDashedIcon
           : TriangleAlertIcon;
   return (
-    <Badge variant={status === "failed" ? "destructive" : "secondary"}>
+    <Badge
+      variant={
+        status === "failed"
+          ? "destructive"
+          : status === "blocked"
+            ? "warning"
+            : status === "flaky"
+              ? "info"
+              : "secondary"
+      }
+    >
       <Icon aria-hidden data-icon="inline-start" />
       {labels[status]}
     </Badge>

@@ -11,7 +11,7 @@ Mode: Operate. Scope: /qa and the Forme QA task. This is a workflow redesign ins
 
 ## Direction contract
 
-THESIS: Selecting checks and starting a run is the task. One clear next action on each screen. Apply quieter through fewer controls, repeated labels, colored statuses and surface layers.
+THESIS: Selecting checks and starting a run is the task. One clear next action on each screen. Apply quieter through fewer controls, repeated labels, duplicate summaries and surface layers. Color draws attention only to setup blockers and meaningful outcomes.
 
 OWN-WORLD: Inherit the base-maia shadcn controls, Geist, semantic neutral surfaces and Cockpit primary accent. No local CSS overrides of Button, Checkbox, Select or Tabs.
 
@@ -19,6 +19,6 @@ STORY: Choose a coverage preset, adjust checks, inspect expected behavior where 
 
 FIRST VIEWPORT: A centered title and work column following Home and Tasks. Three destinations: Checks, Results, Release. Plain-language coverage presets and simple checkbox rows. Selection count, duration, cost and Run sit together below the checklist. Setup and omitted coverage remain explicit. No extra header bar, local-demo label or duplicate counters.
 
-FORM: User-pinned single workspace in the existing visual identity. No AI chat and no sheet/sidebar layout. Short check and environment details use the same centered Dialog as New task. Evidence and issue fixes remain in the main Results view with an explicit back action. The store opens as a standalone page in a new tab. Loading shows actual simulation progress; consequential actions confirm through the existing toast system.
+FORM: User-pinned single workspace in the existing visual identity. No AI chat. Results and issue details open in a resizable right panel that pushes the list aside, matching Library and Chat; narrow screens show one pane at a time. Short check and environment details use the same centered Dialog as New task. Evidence and issue fixes remain in Results with an explicit close/back action. Expected and actual sit side by side when space permits. Status tabs filter results. A single fix action creates a new build, followed by an estimated release retest and human review. The generic Open preview link opens the project in a new tab. Coverage and usage use shared Accordion disclosures. Inbox setup uses a prominent shared warning Alert. The existing guided-tour pattern is available at /qa?tour=qa with temporary, non-persisted fixtures. Loading shows actual simulation progress; consequential actions confirm through the existing toast system.
 
 FINISH: Verify selection-to-release with local history, keyboard and narrow-width layouts. Inspect the built screens, remove design-system drift, and document the patterns that actually ship.

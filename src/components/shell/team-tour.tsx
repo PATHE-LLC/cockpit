@@ -1,11 +1,19 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { playClick } from "@/lib/sounds";
 import { useCockpit } from "@/lib/store";
+import { QA_TOUR_STEPS, startQATour, stopQATour } from "@/lib/qa/tour";
 
 type Step = {
   path: string;
@@ -57,7 +65,8 @@ const STEPS: Step[] = [
     line: "Favorited projects sit in the middle of the rail. Each mark is that project. Hover for the name.",
     prepare: () => {
       const state = useCockpit.getState();
-      if (!state.favoriteProjects.includes("cockpit-os")) state.toggleFavoriteProject("cockpit-os");
+      if (!state.favoriteProjects.includes("cockpit-os"))
+        state.toggleFavoriteProject("cockpit-os");
     },
   },
   {
@@ -98,14 +107,16 @@ const STEPS: Step[] = [
     selector: "[data-tour=doc-editor]",
     keep: "doc",
     line: "Edit the headings, text, and lists beside the chat. Open the prototype the same way. Figma opens in a new tab.",
-    prepare: () => useCockpit.getState().openArtifact("three-strands-dashboard", "prd"),
+    prepare: () =>
+      useCockpit.getState().openArtifact("three-strands-dashboard", "prd"),
   },
   {
     path: "/tasks/model-6d-self-service",
     selector: "[data-tour=sources]",
     keep: "pr",
     line: "The pills are the agent looking something up: the company SOP, the Solar Light note, and the form spec. Press View PR to put the pull request here. Mark done stays on the header. Archive is in the menu, and Delete only shows up after you archive, next to Restore.",
-    prepare: () => useCockpit.getState().openArtifact("model-6d-self-service", "diff"),
+    prepare: () =>
+      useCockpit.getState().openArtifact("model-6d-self-service", "diff"),
   },
 ];
 
@@ -116,15 +127,19 @@ function settle(step: Step | null) {
   if (step?.keep !== "pr") store.closeArtifact("model-6d-self-service");
   toast.dismiss();
   if (document.querySelector("[role=menu]")) {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
   }
 }
 
 async function expandReply() {
   for (let i = 0; i < 80; i++) {
-    const trigger = [...document.querySelectorAll<HTMLElement>("[data-slot=collapsible-trigger]")].find(
-      (node) => node.textContent?.replace(/\s+/g, " ").trim() === "Reply",
-    );
+    const trigger = [
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-slot=collapsible-trigger]",
+      ),
+    ].find((node) => node.textContent?.replace(/\s+/g, " ").trim() === "Reply");
     if (trigger) {
       const root = trigger.closest("[data-slot=collapsible]");
       const open =
@@ -133,7 +148,9 @@ async function expandReply() {
         trigger.getAttribute("aria-expanded") === "true";
       if (!open) trigger.click();
       await new Promise((resolve) => window.setTimeout(resolve, 180));
-      document.querySelector("#slack-draft")?.scrollIntoView({ block: "center", inline: "nearest" });
+      document
+        .querySelector("#slack-draft")
+        ?.scrollIntoView({ block: "center", inline: "nearest" });
       return;
     }
     await new Promise((resolve) => window.setTimeout(resolve, 50));
@@ -175,10 +192,17 @@ function TeamTourInner() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
-  const tourOn = search.get("tour") === "1";
+  const qaTour = search.get("tour") === "qa";
+  const tourOn = search.get("tour") === "1" || qaTour;
+  const steps: Step[] = qaTour ? QA_TOUR_STEPS : STEPS;
   const section = search.get("section");
   const [step, setStep] = useState<number | null>(null);
-  const [box, setBox] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [box, setBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardBox, setCardBox] = useState({ width: 340, height: 168 });
   const dismissed = useRef(false);
@@ -186,25 +210,35 @@ function TeamTourInner() {
   useEffect(() => {
     if (!tourOn) {
       dismissed.current = false;
+      stopQATour();
       return;
     }
     if (dismissed.current) return;
-    setStep(0);
-  }, [tourOn]);
+    let cancelled = false;
+    void (async () => {
+      if (qaTour) await startQATour();
+      if (!cancelled) setStep(0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tourOn, qaTour]);
+  useEffect(() => () => stopQATour(), []);
 
   const end = useCallback(() => {
     playClick();
     dismissed.current = true;
     settle(null);
+    stopQATour();
     setStep(null);
     setBox(null);
     document.documentElement.removeAttribute("data-tour");
-    if (search.get("tour") !== "1") return;
+    if (!tourOn) return;
     const params = new URLSearchParams(search.toString());
     params.delete("tour");
     const next = params.toString();
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
-  }, [pathname, router, search]);
+  }, [pathname, router, search, tourOn]);
 
   useEffect(() => {
     if (step == null) {
@@ -218,7 +252,7 @@ function TeamTourInner() {
     if (step == null) return;
     let cancelled = false;
     let detach = () => {};
-    const current = STEPS[step];
+    const current = steps[step];
 
     const measure = () => {
       if (cancelled) return;
@@ -245,9 +279,17 @@ function TeamTourInner() {
 
     const run = async () => {
       const wanted = current.section;
-      const sectionOk = wanted === undefined || (wanted === null ? section == null : section === wanted);
+      const sectionOk =
+        wanted === undefined ||
+        (wanted === null ? section == null : section === wanted);
       if (pathname !== current.path || !sectionOk) {
-        router.push(wanted ? `${current.path}?section=${wanted}` : current.path);
+        router.push(
+          qaTour
+            ? `${current.path}?tour=qa`
+            : wanted
+              ? `${current.path}?section=${wanted}`
+              : current.path,
+        );
         return;
       }
       settle(current);
@@ -260,6 +302,7 @@ function TeamTourInner() {
       }
       if (cancelled) return;
       measure();
+      if (qaTour) cardRef.current?.focus();
       window.addEventListener("resize", measure);
       window.addEventListener("scroll", measure, true);
       const id = window.setInterval(measure, 250);
@@ -275,7 +318,7 @@ function TeamTourInner() {
       cancelled = true;
       detach();
     };
-  }, [pathname, router, section, step]);
+  }, [pathname, router, section, step, qaTour, steps]);
 
   useLayoutEffect(() => {
     const node = cardRef.current;
@@ -286,8 +329,43 @@ function TeamTourInner() {
     }
   }, [box, cardBox.height, cardBox.width, step]);
 
+  useEffect(() => {
+    if (step == null || !qaTour) return;
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Tab") {
+        const buttons = [
+          ...(cardRef.current?.querySelectorAll<HTMLButtonElement>(
+            "button:not(:disabled)",
+          ) ?? []),
+        ];
+        const index = buttons.indexOf(
+          document.activeElement as HTMLButtonElement,
+        );
+        if (
+          index === -1 ||
+          (!event.shiftKey && index === buttons.length - 1) ||
+          (event.shiftKey && index === 0)
+        ) {
+          event.preventDefault();
+          (event.shiftKey ? buttons.at(-1) : buttons[0])?.focus();
+        }
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        end();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setStep((n) => (n == null ? n : Math.min(steps.length - 1, n + 1)));
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setStep((n) => (n == null ? n : Math.max(0, n - 1)));
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [step, qaTour, end, steps.length]);
+
   if (step == null) return null;
-  const current = STEPS[step];
+  const current = steps[step];
   const place = box ? placeCard(box, cardBox) : { top: 24, left: 24 };
 
   return (
@@ -301,20 +379,22 @@ function TeamTourInner() {
             left: box.left,
             width: box.width,
             height: box.height,
-            boxShadow: "0 0 0 2px var(--color-foreground), 0 0 0 9999px rgb(0 0 0 / 0.55)",
+            boxShadow:
+              "0 0 0 2px var(--color-foreground), 0 0 0 9999px rgb(0 0 0 / 0.55)",
           }}
         />
       ) : null}
       <div
         ref={cardRef}
         role="dialog"
-        aria-modal="false"
-        aria-label="Team tour"
+        aria-modal={qaTour}
+        tabIndex={-1}
+        aria-label={qaTour ? "QA tour" : "Team tour"}
         className="absolute w-[min(22rem,calc(100vw-2rem))] rounded-2xl border bg-popover p-4 text-popover-foreground shadow-lg motion-safe:transition-[top,left] motion-safe:duration-500 motion-safe:ease-out"
         style={{ top: place.top, left: place.left }}
       >
         <p className="text-xs text-muted-foreground">
-          {step + 1} / {STEPS.length}
+          {step + 1} / {steps.length}
         </p>
         <p className="mt-2 text-sm leading-relaxed">{current.line}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
@@ -333,7 +413,7 @@ function TeamTourInner() {
             >
               Back
             </Button>
-            {step === STEPS.length - 1 ? (
+            {step === steps.length - 1 ? (
               <Button size="sm" onClick={end}>
                 Done
               </Button>
@@ -369,7 +449,10 @@ function placeCard(
   let top = target.top + target.height + gap;
   if (!rail && target.left > vw * 0.35 && roomLeft >= card.width + gap) {
     return {
-      top: Math.min(Math.max(margin, target.top + 24), vh - card.height - margin),
+      top: Math.min(
+        Math.max(margin, target.top + 24),
+        vh - card.height - margin,
+      ),
       left: target.left - card.width - gap,
     };
   }
@@ -378,7 +461,10 @@ function placeCard(
     top = Math.min(Math.max(margin, target.top + 8), vh - card.height - margin);
   } else if (target.height > vh * 0.72) {
     top = margin;
-    left = Math.min(target.left + target.width - card.width - 72, vw - card.width - margin - 64);
+    left = Math.min(
+      target.left + target.width - card.width - 72,
+      vw - card.width - margin - 64,
+    );
   } else if (top + card.height > vh - margin) {
     const above = target.top - card.height - gap;
     top = above >= margin ? above : vh - card.height - margin;

@@ -79,3 +79,12 @@ The app has no environment variables and needs no server-side services, so it de
 Motion follows [Emil Kowalski's design-engineering guidance](https://emilkowal.ski/skill): custom ease-out curves, press feedback on buttons, specific transition properties, short staggered list entrances, no animation on keyboard-driven actions, and `prefers-reduced-motion` respected. Accessibility and interface details follow the Vercel Web Interface Guidelines and the WCAG-focused skills listed on [ui-skills.com](https://www.ui-skills.com/skills): visible focus, labelled controls, semantic landmarks, a skip link, `aria-live` for async status, tabular numerals, and loading, empty and error states.
 
 The requested design skills are installed in `.agents/skills` and pinned in `skills-lock.json`: Jakub’s interface skill set, Emil’s design-engineering skill, the official shadcn skill listed on UI Skills, and Impeccable from Recent’s catalog. The QA screens compose the existing `base-maia` components; there is no separate QA stylesheet overriding their appearance. Geist and Geist Mono are bundled locally under their included SIL Open Font License so development and builds do not depend on Google Fonts access.
+
+## QA review links
+
+Open `/qa?tour=qa` for the 11-step QA tour. It uses temporary demo data and restores saved QA work on Done, Skip or Escape. The general app tour remains available at `/?tour=1`.
+
+The two iterations before the quiet design are preserved with dedicated Vercel previews:
+
+- [Iteration 1](https://cockpit-prototype-git-qa-prototype-v1-path-e-llc.vercel.app/qa): `qa-prototype-v1`, original source 98e134d.
+- [Iteration 2](https://cockpit-prototype-git-qa-prototype-v2-path-e-llc.vercel.app/qa): `qa-prototype-v2`, original source 2abaeae1.

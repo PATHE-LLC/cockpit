@@ -2,26 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeftIcon,
   ArrowRightIcon,
-  ExternalLinkIcon,
+  CheckIcon,
+  CircleDashedIcon,
   Loader2Icon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Separator } from "@/components/ui/separator";
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQA } from "@/lib/qa/store";
+import { estimatedCost, estimatedMinutes, idsForScope } from "@/lib/qa/model";
+import { QAInboxButton } from "./qa-shared";
 import { ContactSnapshot } from "./contact-preview";
-import { QAEmpty, QASection } from "./qa-shared";
 
-export function Issues() {
+export function IssueResolution({ onRetest }: { onRetest: () => void }) {
   const s = useQA();
+  const issue = s.issues[0];
   const [working, setWorking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -30,200 +32,178 @@ export function Issues() {
     },
     [],
   );
-  const issue = s.issues[0];
-  const prepareRetest = () => {
-    s.setScope("release");
-    s.setTab("plan");
-  };
-  const change = (apply: boolean) => {
+  if (!issue) return null;
+  const phase =
+    issue.status === "resolved" ? 2 : issue.status === "fixed" ? 1 : 0;
+  const fix = () => {
+    if (working) return;
     setWorking(true);
+    s.startFix();
     timer.current = setTimeout(() => {
-      if (apply) {
-        s.fix();
-        toast.success("Build 13 ready", {
-          description: "Run the checks again to verify the fix.",
-        });
-      } else {
-        s.startFix();
-        toast.success("Fix prepared");
-      }
+      useQA.getState().fix();
       setWorking(false);
-    }, 750);
+      toast.success("Fix applied to build 13", {
+        description: "Retest the release checks to verify it.",
+      });
+    }, 900);
   };
-  if (!issue)
-    return (
-      <QAEmpty
-        title="No issues to fix"
-        description="Run your checks to find issues that need attention."
-        action="Choose checks"
-        onAction={() => s.setTab("plan")}
-      />
-    );
-  const status = {
-    open: "Open",
-    "in-progress": "Fix prepared",
-    fixed: "Needs retest",
-    resolved: "Resolved",
-  }[issue.status];
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 pb-12">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-fit"
-          onClick={() => s.setTab("results")}
-        >
-          <ArrowLeftIcon aria-hidden /> All results
-        </Button>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">QA-104</span>
-            <Badge
-              variant={issue.status === "resolved" ? "default" : "secondary"}
-            >
-              {status}
-            </Badge>
-          </div>
-          <h2 className="text-lg font-medium leading-7">{issue.title}</h2>
-          <p className="text-sm leading-6 text-muted-foreground">
-            {issue.status === "fixed"
-              ? "The fix is in build 13. Run a fresh check to confirm it works."
-              : issue.status === "resolved"
-                ? "Verified on build 13. The message stays in the form after a failed request."
-                : "A failed request clears the customer's message. Keep it in the form so they can retry."}
-          </p>
-        </div>
-        {issue.status === "in-progress" && (
-          <QASection title="Proposed fix">
-            <p className="text-sm text-muted-foreground">
-              Reset the form only after a successful response.
-            </p>
-            <pre className="overflow-x-auto rounded-xl bg-muted p-4 text-xs leading-7">
-              <code>
-                {
-                  "- form.reset();\n  const response = await sendMessage(values);\n+ if (response.ok) form.reset();"
-                }
-              </code>
-            </pre>
-            <p className="text-xs text-muted-foreground">
-              Applying this demo change creates build 13.
-            </p>
-          </QASection>
-        )}
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            disabled={working}
-            onClick={() =>
-              issue.status === "open"
-                ? change(false)
-                : issue.status === "in-progress"
-                  ? change(true)
-                  : issue.status === "fixed"
-                    ? prepareRetest()
-                    : s.setTab("release")
-            }
+    <section
+      data-tour="qa-fix"
+      className="flex flex-col gap-4 rounded-xl border p-4"
+    >
+      <ol className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+        {["Fix issue", "Retest fix", "Review release"].map((label, index) => (
+          <li
+            key={label}
+            className={`flex items-center gap-1.5 ${index === phase ? "font-medium" : "text-muted-foreground"}`}
           >
-            {working ? (
-              <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
+            {index < phase ? (
+              <CheckIcon aria-hidden className="size-3.5" />
             ) : (
-              <ArrowRightIcon aria-hidden />
+              <CircleDashedIcon aria-hidden className="size-3.5" />
             )}
-            {working
-              ? issue.status === "open"
-                ? "Preparing fix…"
-                : "Applying fix…"
-              : issue.status === "open"
-                ? "Prepare fix"
-                : issue.status === "in-progress"
-                  ? "Apply demo fix"
-                  : issue.status === "fixed"
-                    ? "Choose retest checks"
-                    : "Review release"}
-          </Button>
-          <a
-            href={`/preview/forme?build=${s.build}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonVariants({ variant: "ghost" })}
-          >
-            <ExternalLinkIcon aria-hidden />
-            Try in store
-          </a>
+            {label}
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">
+          {phase === 0
+            ? "Keep the message when sending fails"
+            : phase === 1
+              ? "Fix applied · Build 13"
+              : "Fix verified · Build 13"}
+        </h3>
+        <p className="text-sm leading-6 text-muted-foreground">
+          {phase === 0
+            ? "Reset the form only after a successful request. This demo fix creates a new build."
+            : phase === 1
+              ? "Run all 11 release checks on build 13 to verify the fix and the rest of the project."
+              : "The retest confirms the message is preserved. Continue to the release decision."}
+        </p>
+      </div>
+      {phase === 1 && !s.inbox && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Connect the test inbox before the release retest.
+          </p>
+          <QAInboxButton />
         </div>
-        <Separator />
-        <dl className="grid gap-5 text-sm leading-6 sm:grid-cols-2">
-          <div>
-            <dt className="mb-1 text-xs text-muted-foreground">Expected</dt>
-            <dd>The message stays in the form, ready to retry.</dd>
-          </div>
-          <div>
-            <dt className="mb-1 text-xs text-muted-foreground">
-              Actual · Build {issue.originalBuild}
-            </dt>
-            <dd>The error appears and the message field is empty.</dd>
-          </div>
-        </dl>
-        <Collapsible>
-          <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
-            Original evidence and history
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="flex flex-col gap-5 py-4">
+      )}
+      {phase === 1 && (
+        <p className="text-xs text-muted-foreground">
+          11 checks · About {estimatedMinutes(idsForScope("release"))} min · $
+          {estimatedCost(idsForScope("release")).toFixed(2)} estimated AI usage,
+          including retries
+        </p>
+      )}
+      <Button
+        className="w-fit"
+        disabled={working || (phase === 1 && !s.inbox)}
+        onClick={() =>
+          phase === 0 ? fix() : phase === 1 ? onRetest() : s.setTab("release")
+        }
+      >
+        {working ? (
+          <Loader2Icon aria-hidden className="motion-safe:animate-spin" />
+        ) : (
+          <ArrowRightIcon aria-hidden />
+        )}
+        {working
+          ? "Applying fix…"
+          : phase === 0
+            ? "Fix issue"
+            : phase === 1
+              ? "Retest fix"
+              : "Review release"}
+      </Button>
+    </section>
+  );
+}
+
+export function Issues({ onRetest }: { onRetest: () => void }) {
+  const s = useQA();
+  const issue = s.issues[0];
+  if (!issue) return null;
+  return (
+    <section
+      aria-label="Issue details"
+      className="flex flex-col gap-6"
+      data-tour="qa-evidence"
+    >
+      <div className="flex flex-col gap-2">
+        <div>
+          <Badge variant="secondary">{issue.id}</Badge>
+        </div>
+        <h2
+          id="qa-evidence-title"
+          tabIndex={-1}
+          className="text-lg font-medium leading-7 outline-none"
+        >
+          {issue.title}
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          First seen on build {issue.originalBuild} · Contact form
+        </p>
+      </div>
+      <dl className="grid gap-5 text-sm leading-6 @lg/qa-detail:grid-cols-2">
+        <div>
+          <dt className="mb-1 text-xs text-muted-foreground">Expected</dt>
+          <dd>The message stays in the form, ready to retry.</dd>
+        </div>
+        <div>
+          <dt className="mb-1 text-xs text-muted-foreground">
+            Actual · Build {issue.originalBuild}
+          </dt>
+          <dd>The error appears and the message field is empty.</dd>
+        </div>
+      </dl>
+      <IssueResolution onRetest={onRetest} />
+      <Accordion>
+        <AccordionItem value="original">
+          <AccordionTrigger>Original evidence and change</AccordionTrigger>
+          <AccordionContent>
+            <div className="flex flex-col gap-4">
               <div className="max-w-sm">
                 <ContactSnapshot build={issue.originalBuild} annotation />
               </div>
+              <pre className="overflow-x-auto rounded-lg bg-muted p-4 text-xs leading-6">
+                <code>
+                  {
+                    "- form.reset();\n  const response = await sendMessage(values);\n+ if (response.ok) form.reset();"
+                  }
+                </code>
+              </pre>
               <Button
                 variant="outline"
                 className="w-fit"
                 onClick={() => {
                   const run = s.runs.find((run) =>
-                    run.results.some((result) => result.checkId === "C02"),
+                    run.results.some((r) => r.checkId === "C02"),
                   );
                   if (run) s.inspectResult(run.id, "C02");
                 }}
               >
-                View original test evidence <ArrowRightIcon aria-hidden />
+                View original test
               </Button>
-              <ol className="flex flex-col gap-3 text-xs leading-5 text-muted-foreground">
-                <li>Issue opened on build {issue.originalBuild}.</li>
-                {issue.status !== "open" && (
-                  <li>Fix prepared: reset moved to the success handler.</li>
-                )}
-                {issue.fixedBuild && (
-                  <li>
-                    Build {issue.fixedBuild} created. Affected evidence marked
-                    stale.
-                  </li>
-                )}
-                {issue.status === "resolved" && (
-                  <li>Retest passed on build 13. Issue resolved.</li>
-                )}
-              </ol>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </AccordionContent>
+        </AccordionItem>
         {s.feedback.length > 0 && (
-          <QASection
-            title="Tester feedback"
-            detail={`${s.feedback.length} linked reports`}
-          >
-            {s.feedback.map((feedback) => (
-              <Collapsible key={feedback.id}>
-                <CollapsibleTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      className="h-auto w-full justify-between whitespace-normal py-3 text-start"
-                    />
-                  }
-                >
-                  {feedback.description}
-                  <span className="shrink-0 text-xs">{feedback.id}</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex flex-col gap-4 py-4 text-sm leading-6">
-                    <dl className="flex flex-col gap-3">
+          <AccordionItem value="feedback">
+            <AccordionTrigger>
+              Tester feedback{" "}
+              <span className="ml-auto text-xs text-muted-foreground">
+                {s.feedback.length} reports
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-col gap-6">
+                {s.feedback.map((feedback) => (
+                  <div key={feedback.id} className="flex flex-col gap-3">
+                    <p className="font-medium">{feedback.description}</p>
+                    <dl className="grid gap-4 @lg/qa-detail:grid-cols-2">
                       <div>
                         <dt className="text-xs text-muted-foreground">
                           Expected
@@ -238,8 +218,8 @@ export function Issues() {
                       </div>
                     </dl>
                     <p className="text-xs text-muted-foreground">
-                      Build {feedback.build} · {feedback.category} ·{" "}
-                      {feedback.page} · {feedback.device}
+                      {feedback.id} · Build {feedback.build} ·{" "}
+                      {feedback.category} · {feedback.page} · {feedback.device}
                     </p>
                     <div className="max-w-sm">
                       <ContactSnapshot
@@ -248,12 +228,12 @@ export function Issues() {
                       />
                     </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </QASection>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         )}
-      </div>
-    </div>
+      </Accordion>
+    </section>
   );
 }

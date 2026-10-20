@@ -22,7 +22,9 @@ All execution, captures, integrations, fixes, builds, usage and approvals are lo
 
 ## Confirmed design constraints
 
-Use Cockpit's existing shadcn components and preset, including the centered dialog used by New task. Follow the home, tasks and project surfaces for hierarchy and interaction quality. QA has no AI chat and no sheet or sidebar detail layout. The store opens in a new tab; evidence stays in the main workspace. Remove unnecessary header chrome and repeated labels. Every screen must make its next action clear, with concise, plain-language copy, useful progress and confirmation toasts.
+Use Cockpit's existing shadcn components and preset, including the centered dialog used by New task. Follow the home, tasks and project surfaces for hierarchy and interaction quality. QA has no AI chat. Result and issue details open in a resizable right panel that makes space for the results list, following Library and Chat. Narrow screens show one pane at a time. The project preview opens in a new tab. Remove unnecessary header chrome and repeated labels. Every screen must make its next action clear, with concise, plain-language copy, useful progress and confirmation toasts.
+
+The QA guided tour uses `/qa?tour=qa`, temporary fixtures and the existing app tour pattern; it restores saved QA work when it ends. Blocked and flaky outcomes use restrained amber and violet semantic colors.
 
 Apply Impeccable's quieter principle: fewer background accents, flatter grouping, less color and purposeful motion. Preserve readable contrast and clear control affordances. The user values Bencho's restraint, layout and interaction quality; references also include Recent, Designeer and Linear.
 

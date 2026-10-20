@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T11:02:17.606591+00:00",
+  "generatedAt": "2026-10-20T11:52:05.202136+00:00",
   "title": "Design System: Cockpit",
   "extensions": {
     "colorMeta": {
@@ -339,6 +339,118 @@
           "oklch(0.85 0.191 22.216)",
           "oklch(0.95 0.191 22.216)"
         ]
+      },
+      "warning": {
+        "role": "warning",
+        "displayName": "Warning Amber",
+        "tonalRamp": [
+          "oklch(0.15 0.045 85)",
+          "oklch(0.25 0.045 85)",
+          "oklch(0.35 0.045 85)",
+          "oklch(0.45 0.045 85)",
+          "oklch(0.60 0.045 85)",
+          "oklch(0.75 0.045 85)",
+          "oklch(0.85 0.045 85)",
+          "oklch(0.95 0.045 85)"
+        ]
+      },
+      "warning-foreground": {
+        "role": "warning",
+        "displayName": "Warning Amber Ink",
+        "tonalRamp": [
+          "oklch(0.15 0.09 65)",
+          "oklch(0.25 0.09 65)",
+          "oklch(0.35 0.09 65)",
+          "oklch(0.45 0.09 65)",
+          "oklch(0.60 0.09 65)",
+          "oklch(0.75 0.09 65)",
+          "oklch(0.85 0.09 65)",
+          "oklch(0.95 0.09 65)"
+        ]
+      },
+      "info": {
+        "role": "info",
+        "displayName": "Review Violet",
+        "tonalRamp": [
+          "oklch(0.15 0.025 265)",
+          "oklch(0.25 0.025 265)",
+          "oklch(0.35 0.025 265)",
+          "oklch(0.45 0.025 265)",
+          "oklch(0.60 0.025 265)",
+          "oklch(0.75 0.025 265)",
+          "oklch(0.85 0.025 265)",
+          "oklch(0.95 0.025 265)"
+        ]
+      },
+      "info-foreground": {
+        "role": "info",
+        "displayName": "Review Violet Ink",
+        "tonalRamp": [
+          "oklch(0.15 0.15 270)",
+          "oklch(0.25 0.15 270)",
+          "oklch(0.35 0.15 270)",
+          "oklch(0.45 0.15 270)",
+          "oklch(0.60 0.15 270)",
+          "oklch(0.75 0.15 270)",
+          "oklch(0.85 0.15 270)",
+          "oklch(0.95 0.15 270)"
+        ]
+      },
+      "warning-dark": {
+        "role": "warning",
+        "displayName": "Warning Amber — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.045 75)",
+          "oklch(0.25 0.045 75)",
+          "oklch(0.35 0.045 75)",
+          "oklch(0.45 0.045 75)",
+          "oklch(0.60 0.045 75)",
+          "oklch(0.75 0.045 75)",
+          "oklch(0.85 0.045 75)",
+          "oklch(0.95 0.045 75)"
+        ]
+      },
+      "warning-foreground-dark": {
+        "role": "warning",
+        "displayName": "Warning Amber Ink — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.11 85)",
+          "oklch(0.25 0.11 85)",
+          "oklch(0.35 0.11 85)",
+          "oklch(0.45 0.11 85)",
+          "oklch(0.60 0.11 85)",
+          "oklch(0.75 0.11 85)",
+          "oklch(0.85 0.11 85)",
+          "oklch(0.95 0.11 85)"
+        ]
+      },
+      "info-dark": {
+        "role": "info",
+        "displayName": "Review Violet — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.055 270)",
+          "oklch(0.25 0.055 270)",
+          "oklch(0.35 0.055 270)",
+          "oklch(0.45 0.055 270)",
+          "oklch(0.60 0.055 270)",
+          "oklch(0.75 0.055 270)",
+          "oklch(0.85 0.055 270)",
+          "oklch(0.95 0.055 270)"
+        ]
+      },
+      "info-foreground-dark": {
+        "role": "info",
+        "displayName": "Review Violet Ink — Dark",
+        "tonalRamp": [
+          "oklch(0.15 0.08 270)",
+          "oklch(0.25 0.08 270)",
+          "oklch(0.35 0.08 270)",
+          "oklch(0.45 0.08 270)",
+          "oklch(0.60 0.08 270)",
+          "oklch(0.75 0.08 270)",
+          "oklch(0.85 0.08 270)",
+          "oklch(0.95 0.08 270)"
+        ]
       }
     },
     "typographyMeta": {
@@ -413,7 +525,27 @@
       {
         "name": "reduced-motion",
         "value": "prefers-reduced-motion: reduce",
-        "purpose": "Existing overlays remove animation; sheets and active buttons remove translation."
+        "purpose": "Existing overlays remove animation; sheets and active buttons remove translation. QA applies its split immediately and removes header/tab width, Accordion chevron and tour-position transitions."
+      },
+      {
+        "name": "qa-panel-open",
+        "value": "240ms cubic ease-out (1 - (1 - t)^3)",
+        "purpose": "Shared Resizable panels make space for evidence: a 38% Results list and 62% detail panel from 1024px; list minimum 28%, detail maximum 72%. Below 1024px, show one pane at a time."
+      },
+      {
+        "name": "qa-header-width",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "QA header and workspace tabs expand from a 48rem to 1440px maximum when result or issue details open."
+      },
+      {
+        "name": "accordion-chevron",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Shared Accordion chevron rotates 180 degrees with disclosure state."
+      },
+      {
+        "name": "tour-position",
+        "value": "500ms cubic-bezier(0, 0, 0.2, 1)",
+        "purpose": "Existing TeamTour spotlight and card follow each prepared target only when motion is allowed."
       }
     ],
     "breakpoints": [
@@ -476,7 +608,7 @@
       "name": "Workspace Tabs",
       "kind": "nav",
       "refersTo": "tabs",
-      "description": "The shared default Tabs, shown with QA labels.",
+      "description": "The shared default Tabs, shown with QA destinations. Results reuse them for All, Failed, Blocked, Flaky and Passed filters with counts and narrow-screen horizontal overflow.",
       "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"QA workspace\"><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">Checks</button><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Results</button><button type=\"button\" class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Release</button></div>",
       "css": ".ds-tabs{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:3px;border-radius:var(--radius-4xl,1.625rem);background:var(--muted);color:var(--muted-foreground);}.ds-tab{display:inline-flex;align-items:center;justify-content:center;height:calc(100% - 1px);padding:4px 8px;border:1px solid transparent;border-radius:var(--radius-xl,.875rem);background:transparent;color:color-mix(in oklch,var(--foreground) 60%,transparent);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap;transition:all 150ms cubic-bezier(0.4,0,0.2,1);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-tab:hover{color:var(--foreground);}.ds-tab[aria-selected=true]{background:var(--background);color:var(--foreground);}.ds-tab:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-tab:disabled{pointer-events:none;opacity:.5;}:host-context(.dark) .ds-tab{color:var(--muted-foreground);}:host-context(.dark) .ds-tab[aria-selected=true]{border-color:var(--input);background:color-mix(in oklch,var(--input) 30%,transparent);color:var(--foreground);}"
     },
@@ -484,7 +616,7 @@
       "name": "Secondary Badge",
       "kind": "chip",
       "refersTo": "badge-secondary",
-      "description": "Compact context and neutral QA outcome label.",
+      "description": "Compact context and neutral passed, stale or not-tested QA label. Shared warning and info variants distinguish blocked and flaky outcomes with text and inline icons.",
       "html": "<span class=\"ds-badge\">Passed</span>",
       "css": ".ds-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:20px;padding:2px 8px;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);background:var(--secondary);color:var(--secondary-foreground);font-size:12px;font-weight:500;line-height:16px;white-space:nowrap;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-badge:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}"
     },
@@ -510,6 +642,22 @@
       "description": "QA-only divided rows with a semantic checkbox and separate detail action; short details use the centered New task Dialog.",
       "html": "<ul class=\"ds-checklist\"><li class=\"ds-check-row\"><span class=\"ds-checkbox-wrap\"><input class=\"ds-checkbox\" id=\"ds-qa-check\" type=\"checkbox\" checked><svg class=\"ds-checkbox-mark\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m20 6-11 11-5-5\"/></svg></span><label class=\"ds-check-label\" for=\"ds-qa-check\">Keep message after a failure</label><button type=\"button\" class=\"ds-detail\" aria-label=\"View details for Keep message after a failure\"><svg class=\"ds-detail-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button></li></ul>",
       "css": ".ds-checkbox-wrap{position:relative;display:inline-flex;width:16px;height:16px;flex-shrink:0;}.ds-checkbox{appearance:none;width:16px;height:16px;margin:0;border:1px solid var(--input);border-radius:6px;background:transparent;cursor:pointer;transition:box-shadow 150ms;}.ds-checkbox:checked{border-color:var(--primary);background:var(--primary);}.ds-checkbox:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-checkbox:disabled{cursor:not-allowed;opacity:.5;}.ds-checkbox-mark{position:absolute;inset:1px;width:14px;height:14px;color:var(--primary-foreground);pointer-events:none;opacity:0;}.ds-checkbox:checked+.ds-checkbox-mark{opacity:1;}:host-context(.dark) .ds-checkbox:not(:checked){background:color-mix(in oklch,var(--input) 30%,transparent);}.ds-checklist{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;background:transparent;color:var(--foreground);font-size:14px;line-height:20px;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-check-row{display:flex;align-items:center;gap:12px;padding:12px 0;}.ds-check-row+.ds-check-row{border-top:1px solid var(--border);}.ds-check-label{flex:1;min-width:0;cursor:pointer;font-weight:400;}.ds-detail{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;padding:0;border:1px solid transparent;border-radius:var(--radius-4xl,1.625rem);background:transparent;color:var(--foreground);transition:all 150ms;}.ds-detail-icon{width:16px;height:16px;}.ds-detail:hover{background:var(--muted);}.ds-detail:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-detail:active{translate:0 1px;}@media(prefers-reduced-motion:reduce){.ds-detail:active{translate:none;}}"
+    },
+    {
+      "name": "Shared Accordion",
+      "kind": "custom",
+      "refersTo": "accordion-trigger",
+      "description": "Divided shared disclosure for Coverage details, Run usage, release evidence, total usage, captures, attempts and retained issue evidence. Native details keeps this standalone preview interactive.",
+      "html": "<details class=\"ds-accordion\"><summary class=\"ds-accordion-trigger\"><span>Coverage details</span><span class=\"ds-accordion-count\">6 not selected</span><svg class=\"ds-accordion-chevron\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></summary><div class=\"ds-accordion-content\">A passing run verifies only the selected checks.</div></details>",
+      "css": ".ds-accordion{width:100%;color:var(--foreground);font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-accordion-trigger{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-radius:var(--radius-lg,.625rem);font-size:14px;font-weight:500;line-height:20px;text-align:left;list-style:none;cursor:pointer;transition:color 150ms cubic-bezier(.4,0,.2,1);}.ds-accordion-trigger::-webkit-details-marker{display:none;}.ds-accordion-trigger:hover{color:var(--foreground);}.ds-accordion-trigger:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-accordion-count{margin-left:auto;font-size:12px;font-weight:400;line-height:16px;color:var(--muted-foreground);}.ds-accordion-chevron{width:16px;height:16px;flex-shrink:0;color:var(--muted-foreground);transition:transform 200ms cubic-bezier(.4,0,.2,1);}.ds-accordion[open] .ds-accordion-chevron{transform:rotate(180deg);}.ds-accordion-content{padding-bottom:16px;font-size:14px;line-height:24px;}@media(prefers-reduced-motion:reduce){.ds-accordion-chevron{transition:none;}}"
+    },
+    {
+      "name": "Warning Alert",
+      "kind": "custom",
+      "refersTo": "alert-warning",
+      "description": "Shared warning variant for missing inbox setup before the checklist: amber semantic pair, inline icon, consequence and explicit recovery action.",
+      "html": "<div class=\"ds-alert-warning\" role=\"alert\"><svg class=\"ds-alert-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4m0 4h.01\"/></svg><div class=\"ds-alert-title\">Connect an inbox to test delivery</div><div class=\"ds-alert-description\">Without it, this check will be blocked.<div class=\"ds-alert-recovery\"><button type=\"button\" class=\"ds-alert-button\">Connect test inbox</button></div></div></div>",
+      "css": ".ds-alert-warning{display:grid;width:100%;grid-template-columns:auto 1fr;gap:2px 10px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-lg,.625rem);background:var(--warning);color:var(--warning-foreground);text-align:left;font-size:14px;line-height:20px;font-family:var(--font-geist-sans,Geist),Arial,sans-serif;}.ds-alert-icon{grid-row:span 2;translate:0 2px;width:16px;height:16px;}.ds-alert-title{font-weight:500;}.ds-alert-description{grid-column:2;}.ds-alert-recovery{margin-top:12px;}.ds-alert-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-4xl,1.625rem);background:color-mix(in oklch,var(--input) 30%,transparent);color:inherit;font-family:inherit;font-size:14px;font-weight:500;line-height:20px;cursor:pointer;transition:all 150ms cubic-bezier(.4,0,.2,1);}.ds-alert-button:hover{background:color-mix(in oklch,var(--input) 50%,transparent);color:var(--foreground);}.ds-alert-button:focus-visible{border-color:var(--ring);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 50%,transparent);}.ds-alert-button:active{translate:0 1px;}.ds-alert-button:disabled{pointer-events:none;opacity:.5;}@media(prefers-reduced-motion:reduce){.ds-alert-button:active{translate:none;}}"
     }
   ],
   "narrative": {
@@ -533,6 +681,11 @@
         "section": "elevation"
       },
       {
+        "name": "The Contextual Action Rule",
+        "body": "In QA, hide the list's primary next action while detail is open; the detail panel owns the contextual next step.",
+        "section": "components"
+      },
+      {
         "name": "The Preset Control Rule",
         "body": "Reuse the existing shadcn variants, states and semantics; compose workflow structure around them.",
         "section": "components"
@@ -542,7 +695,8 @@
       "Do use semantic surface/foreground pairs in both themes.",
       "Do preserve the preset's control radii, focus rings and disabled states.",
       "Do use tabular numerals for estimates and counts.",
-      "Do keep QA's selection, estimate and Run together, and its evidence and issue fixes in the main Results view."
+      "Do keep QA's selection, estimate and Run together, and open evidence and issue fixes beside the Results list on desktop or in one pane on narrow screens.",
+      "Do let the QA detail panel own the contextual next action while it is open."
     ],
     "donts": [
       "Don't override shared controls to create a separate QA visual system.",

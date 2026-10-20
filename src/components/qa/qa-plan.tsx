@@ -1,15 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRightIcon, Loader2Icon, PlayIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  Loader2Icon,
+  PlayIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -76,7 +83,7 @@ export function RunPlan({
               Select what to test, then start a run.
             </p>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" data-tour="qa-coverage">
             <Label htmlFor="qa-coverage">Test coverage</Label>
             <QASelect
               id="qa-coverage"
@@ -99,6 +106,18 @@ export function RunPlan({
                 : scope.description}
             </p>
           </div>
+          {blocked && (
+            <Alert variant="warning" data-tour="qa-inbox">
+              <TriangleAlertIcon aria-hidden />
+              <AlertTitle>Connect an inbox to test delivery</AlertTitle>
+              <AlertDescription>
+                <p>Without it, this check will be blocked.</p>
+                <div className="mt-3">
+                  <QAInboxButton disabled={running} />
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
           <div>
             <div className="flex items-center justify-between gap-3 border-b pb-3 text-xs text-muted-foreground">
               <span>Checklist</span>
@@ -141,40 +160,52 @@ export function RunPlan({
                 </li>
               ))}
             </ul>
-            {blocked && (
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t py-4">
-                <p className="text-xs text-muted-foreground">
-                  The delivery check needs a test inbox.
-                </p>
-                <QAInboxButton disabled={running} />
-              </div>
-            )}
           </div>
-          <Collapsible>
-            <CollapsibleTrigger render={<Button variant="ghost" size="sm" />}>
-              What this run leaves out
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="flex flex-col gap-3 py-4 text-xs leading-5 text-muted-foreground">
-                {omitted.length > 0 && (
-                  <ul className="flex flex-col gap-2">
-                    {omitted.map((check) => (
-                      <li key={check.id}>{check.title}</li>
-                    ))}
-                  </ul>
-                )}
-                <p>
-                  This agreed checklist excludes real payments, production
-                  delivery, other browsers and comprehensive security testing. A
-                  passing run only verifies the selected checks.
-                </p>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          <Accordion data-tour="qa-coverage-limits" className="border-t">
+            <AccordionItem value="coverage">
+              <AccordionTrigger>
+                <span>Coverage details</span>
+                <span className="ml-auto text-xs font-normal text-muted-foreground">
+                  {omitted.length} not selected
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <h3 className="mb-2 text-xs font-medium text-muted-foreground">
+                      Not selected
+                    </h3>
+                    {omitted.length ? (
+                      <ul className="flex flex-col gap-2 text-sm">
+                        {omitted.map((check) => (
+                          <li key={check.id}>{check.title}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>All 11 checks selected.</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-xs font-medium text-muted-foreground">
+                      Outside this checklist
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      <li>Real payments and production email</li>
+                      <li>Browsers other than Chrome</li>
+                      <li>A full security review</li>
+                    </ul>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      A passing run verifies only the selected checks.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
       <Separator />
-      <footer className="shrink-0 bg-background py-4">
+      <footer className="shrink-0 bg-background py-4" data-tour="qa-run">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6">
           <div className="flex flex-col gap-1">
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">

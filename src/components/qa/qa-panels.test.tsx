@@ -111,3 +111,37 @@ describe("choosing a QA run", () => {
     expect(run).toHaveBeenCalledOnce();
   });
 });
+
+describe("the connected QA fix and retest", () => {
+  beforeEach(() => {
+    useQA.setState(useQA.getInitialState());
+    useQA.getState().configureInbox();
+    useQA.getState().run();
+    useQA.getState().inspectResult(1, "C02");
+  });
+
+  it("applies one fix action and retests the release selection before resolving", async () => {
+    const user = userEvent.setup();
+    const onRun = vi.fn(() => useQA.getState().run());
+    render(<Results running={false} onRun={onRun} />);
+    const original = useQA.getState().runs[0];
+    await user.click(
+      screen.getByRole("button", { name: "Fix issue" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Applying fix…" }),
+    ).toBeInTheDocument();
+    const retest = await screen.findByRole(
+      "button",
+      { name: "Retest fix" },
+      { timeout: 2500 },
+    );
+    expect(useQA.getState().issues[0].status).toBe("fixed");
+    expect(useQA.getState().build).toBe(13);
+    await user.click(retest);
+    expect(onRun).toHaveBeenCalledOnce();
+    expect(useQA.getState().runs[1].selected).toHaveLength(11);
+    expect(useQA.getState().issues[0].status).toBe("resolved");
+    expect(useQA.getState().runs[0]).toEqual(original);
+  });
+});
