@@ -5,6 +5,7 @@ import { useCockpit } from "@/lib/store";
 import { EmailQuestionsCard, SlackDraftCard } from "./draft-cards";
 
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
+vi.mock("@/lib/sounds", () => ({ playCue: vi.fn(), playClick: vi.fn() }));
 
 const initial = useCockpit.getState();
 beforeEach(() => useCockpit.setState(initial, true));

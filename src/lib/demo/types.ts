@@ -4,6 +4,7 @@ export type TaskKind =
   | "code-change"
   | "figma-design"
   | "prd-prototype"
+  | "qa-review"
   | "ad-hoc";
 
 export type TaskStatus =

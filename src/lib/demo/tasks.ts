@@ -2,6 +2,20 @@ import type { Task } from "./types";
 
 export const TASKS: Task[] = [
   {
+    id: "forme-contact-qa",
+    kind: "qa-review",
+    title: "Check Forme’s contact form before release",
+    summary: "Review the QA plan, investigate a failed submission, and verify the fix before release.",
+    app: "github",
+    requester: "Matt",
+    status: "needs-review",
+    statusDetail: "QA plan",
+    prepared: ["Focused run plan", "Contact form preview", "Release review"],
+    due: "Today",
+    project: "Forme ecommerce",
+    autonomy: "Testing, fixes and approvals are simulated. Nothing leaves this browser.",
+  },
+  {
     id: "glenn-supabase-rls",
     kind: "slack-reply",
     title: "Reply to Glenn about Supabase RLS",
@@ -92,11 +106,12 @@ export const STATUS_LABEL: Record<Task["status"], string> = {
 export const USER_NAME = "Abdul";
 
 export const BRIEFING = {
-  headline: "5 items",
+  headline: "6 items",
   summary:
-    "Glenn's Supabase reply is drafted. Alyssa's Wix email needs two answers. Model 6D is ready to approve. Recall frames are in Figma. The 3 Strands PRD has a prototype.",
+    "Forme’s contact form has a QA plan ready. Glenn's Supabase reply is drafted. Alyssa's Wix email needs two answers. Model 6D is ready to approve. Recall frames are in Figma. The 3 Strands PRD has a prototype.",
   transcript: [
-    "Good morning, Abdul. Five items.",
+    "Good morning, Abdul. Six items.",
+    "Forme’s contact form has a QA plan ready for review.",
     "Glenn's Supabase R L S reply is drafted.",
     "Alyssa's Wix quote email needs two answers.",
     "Model 6D is ready to approve. Nothing is pushed.",

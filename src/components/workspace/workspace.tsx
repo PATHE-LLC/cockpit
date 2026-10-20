@@ -25,6 +25,7 @@ import { CodePane } from "./panes/code-pane";
 import { EmailPane } from "./panes/email-pane";
 import { SlackPane } from "./panes/slack-pane";
 import { ThreeStrandsPane } from "./panes/three-strands-pane";
+import { QAWorkspace } from "@/components/qa/qa-workspace";
 
 const ASK_TASK: Task = {
   id: "ask",
@@ -169,6 +170,8 @@ export function Workspace({ taskId, query: q }: { taskId: string; query?: string
   const open = useCockpit((s) => Boolean(s.open[task?.id ?? ""]) && task?.kind !== "figma-design");
   const close = useCockpit((s) => s.closeArtifact);
   const isDesktop = useIsDesktop();
+
+  if (task?.kind === "qa-review") return <QAWorkspace initialPrompt={q}/>;
 
   if (!task) {
     return (

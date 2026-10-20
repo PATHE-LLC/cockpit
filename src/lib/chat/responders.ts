@@ -398,6 +398,7 @@ export function respond(taskId: string, text: string): Reply {
 
 export function routePrompt(text: string): string | null {
   const t = text.toLowerCase();
+  if (/\bqa\b|forme|ecommerce|e-commerce|contact form|test.*release/.test(t)) return "forme-contact-qa";
   if (/glenn|supabase|\brls\b|row level/.test(t)) return "glenn-supabase-rls";
   if (/alyssa|wix|custom quote|\bquote/.test(t)) return "alyssa-wix-quotes";
   if (/model 6d|6d|self-service|self service/.test(t)) return "model-6d-self-service";

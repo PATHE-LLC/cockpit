@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# local working documents
+/docs/
+
 # next.js
 /.next/
 /out/

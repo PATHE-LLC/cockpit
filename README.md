@@ -10,11 +10,16 @@ Everything runs on local demo data. There is no backend, no database and no secr
 | --- | --- | --- |
 | Daily briefing | `/` | Greeting, main prompt box, playable audio summary (browser speech), five-task checklist with task-specific states, "View all". |
 | All tasks | `/tasks` | Filter, search, empty state. |
+| Build & QA | `/qa` or `/tasks/forme-contact-qa` | Review a run plan, run simulated checks, capture in-product feedback, fix on a new build, retest and review a release. |
 | Task workspace | `/tasks/[id]` | Resizable chat + prepared work. Mobile gets Chat / Prepared work tabs. |
 | Autonomy controls | Header → "Autonomy" | Proactivity level, offline work, per-action permissions. |
 | Live prototype | `/preview/3-strands` | The frontend-only dashboard that the 3 Strands task iterates on. Also embedded in its workspace. |
 
-### The five tasks
+### The tasks
+
+**Forme contact form QA** is the new end-to-end review task. Start from Home or the Build & QA rail icon. Run the initial plan to see a failed check, a setup blocker and a flaky retry. Open the storefront, submit the form, and report the message-retention bug. Prepare the fix in Issues & retest, apply build 13, configure the demo inbox, and run the release pass. Review both flaky attempts, acknowledge coverage limits, record reviewer sign-offs and approve or hold the demo release. Run/evidence history and decisions stay in browser-local storage. All execution, captured evidence, costs and reviewer identities are illustrative; there is no live runner or deployment.
+
+The living index is explicitly deferred from this prototype.
 
 1. **Reply to Glenn about Supabase RLS** (Slack): editable reply draft with inline `[n]` citations (hover for the quote), a sources panel, the original thread and a migration sketch. Ask it to shorten, change tone, add SQL or explain sources. Send posts to a simulated thread and completes the task.
 2. **Email Alyssa on custom quotes in Wix** (email): feasibility matrix, sources, the original email, two decisions that regenerate the draft (deposit, tone). Manual edits are never overwritten without asking.

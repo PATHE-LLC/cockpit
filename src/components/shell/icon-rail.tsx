@@ -1,6 +1,6 @@
 "use client";
 
-import { FileTextIcon, HouseIcon, LibraryIcon, ListIcon, PlusIcon } from "lucide-react";
+import { FileTextIcon, FlaskConicalIcon, HouseIcon, LibraryIcon, ListIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -17,6 +17,7 @@ const LINKS = [
   { href: "/", label: "Home", icon: HouseIcon, exact: true },
   { href: "/briefing", label: "Briefing", icon: FileTextIcon, exact: false },
   { href: "/tasks", label: "Tasks", icon: ListIcon, exact: false },
+  { href: "/qa", label: "Build & QA", icon: FlaskConicalIcon, exact: false },
   { href: "/library", label: "Library", icon: LibraryIcon, exact: false },
 ];
 

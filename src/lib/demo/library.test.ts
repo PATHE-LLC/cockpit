@@ -40,6 +40,7 @@ describe("library", () => {
   it("attaches only the obvious tasks", () => {
     const attached = Object.fromEntries(TASKS.map((task) => [task.id, task.project ?? ""]));
     expect(attached).toEqual({
+      "forme-contact-qa": "Forme ecommerce",
       "glenn-supabase-rls": "",
       "alyssa-wix-quotes": "",
       "model-6d-self-service": "RMA Form",
